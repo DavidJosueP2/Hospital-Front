@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/shadcn/card";
 import { Button } from "@/components/ui/shadcn/button";
 import LoginFormComponent from "@/pages/auth/LoginFormComponente";
+import { Link } from "react-router-dom";
 
 function Login() {
   return (
@@ -38,13 +39,15 @@ function Login() {
         </CardContent>
 
         {/* Footer */}
+
         <CardFooter className="flex flex-col items-center text-sm text-gray-500">
           <p className="mb-1">¿Olvidaste tu contraseña?</p>
           <Button
+            asChild
             variant="link"
             className="text-sky-600 hover:underline p-0 font-medium"
           >
-            Recupérala aquí
+            <Link to="/password-recovery">Recupérala aquí</Link>
           </Button>
         </CardFooter>
       </Card>

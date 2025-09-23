@@ -4,10 +4,13 @@ import tailwindcss from "@tailwindcss/vite";
 import * as path from "node:path";
 
 export default defineConfig({
-    plugins: [react(), tailwindcss()],
-    resolve: {
-        alias: {
-            "@": path.resolve(__dirname, "src"),
-        },
+  plugins: [react(), tailwindcss()],
+  server: {
+    port: 5174,
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
     },
+  },
 });

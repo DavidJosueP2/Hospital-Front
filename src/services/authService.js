@@ -5,17 +5,28 @@ const baseUrl = import.meta.env.VITE_API_URL;
 
 const authService = {
   // Login con DNI y contraseña
-  login: async (dni, password) => {
-    const response = await api.post(`${baseUrl}/auth/login`, {
-      username: dni,
-      password,
-    });
+  login: async (identifier, password) => {
+    try {
+      const response = await api.post(`${baseUrl}/auth/login`, {
+        username: identifier,
+        password,
+      });
 
-    if (response.data?.token) {
-      setAccessToken(response.data.token);
+      if (response.data?.token) {
+        setAccessToken(response.data.token);
+        return { success: true, ...response.data };
+      }
+
+      return { success: false, message: "No se recibió token válido" };
+    } catch (err) {
+      if (err.response?.status === 401) {
+        return { success: false, message: "Credenciales inválidas" };
+      }
+      if (err.response) {
+        return { success: false, message: "Error del servidor" };
+      }
+      return { success: false, message: "Error de red. Verifica tu conexión" };
     }
-
-    return response.data;
   },
 
   // Logout (solo cliente, no llama backend)

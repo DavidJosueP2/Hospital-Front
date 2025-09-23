@@ -8,6 +8,8 @@ import Login from "@/pages/auth/Login";
 import ErrorBoundary from "@/utils/ErrorBoundary";
 import { AuthProvider } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/utils/ProtectedRoute";
+import PasswordRecovery from "@/pages/auth/PasswordRecovery";
+import ResetPassword from "@/pages/auth/ResetPassword";
 
 export default function App() {
   return (
@@ -17,6 +19,8 @@ export default function App() {
           {/* Auth */}
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
+            <Route path="/password-recovery" element={<PasswordRecovery />} />
+            <Route path="/reset" element={<ResetPassword />} />
           </Route>
 
           {/* Rutas dentro del layout de administración */}
