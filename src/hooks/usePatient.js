@@ -6,7 +6,7 @@ export const usePatientsPage = ({ centerId, page = 0, size = 10 }) => {
   return useQuery({
     queryKey: ["patients", centerId, page, size],
     queryFn: async () => {
-      const res = await api.get("/consulting/patients", {
+  const res = await api.get("/api/consulting/patients", {
         params: { centerId, page, size },
       });
       return res.data;
@@ -21,7 +21,7 @@ export const usePatient = ({ id }) => {
   return useQuery({
     queryKey: ["patient", id],
     queryFn: async () => {
-      const res = await api.get(`/consulting/patients/${id}`);
+  const res = await api.get(`/api/consulting/patients/${id}`);
       return res.data;
     },
     enabled: !!id, // solo corre si id existe
@@ -32,7 +32,7 @@ export const usePatient = ({ id }) => {
 export const useCreatePatient = () => {
   return useMutation({
     mutationFn: async (payload) => {
-      const res = await api.post("/consulting/patients", payload);
+  const res = await api.post("/api/consulting/patients", payload);
       return res.data;
     },
   });
@@ -42,7 +42,7 @@ export const useCreatePatient = () => {
 export const useUpdatePatient = ({ id }) => {
   return useMutation({
     mutationFn: async (payload) => {
-      const res = await api.put(`/consulting/patients/${id}`, payload);
+  const res = await api.put(`/api/consulting/patients/${id}`, payload);
       return res.data;
     },
   });
@@ -52,7 +52,7 @@ export const useUpdatePatient = ({ id }) => {
 export const useDeletePatient = () => {
   return useMutation({
     mutationFn: async (id) => {
-      await api.delete(`/consulting/patients/${id}`);
+  await api.delete(`/api/consulting/patients/${id}`);
       return true;
     },
   });

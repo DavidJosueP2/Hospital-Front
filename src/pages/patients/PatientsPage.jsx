@@ -5,48 +5,31 @@ import DataTable from "@/components/ui/table/data-table";
 import PatientForm from "@/components/patients/PatientForm";
 import { toast } from "sonner";
 import { Eye, Pencil, Trash2 } from "lucide-react";
+import { usePatientsPage, useCreatePatient, useUpdatePatient, useDeletePatient } from "@/hooks/usePatient";
 
-const dummyCenters = [
+// Puedes cambiar el centerId aquí o hacerlo dinámico según tu app
+const centerId =1;
+const centers = [
   { id: 1, name: "Centro Médico 1" },
   { id: 2, name: "Centro Médico 2" },
 ];
 
-const dummyPatients = [
-  {
-    id: 1,
-    dni: "001",
-    firstName: "Alice",
-    lastName: "Johnson",
-    birthDate: "1990-01-15",
-    gender: "FEMALE",
-    centerId: 1
-  },
-  {
-    id: 2,
-    dni: "002",
-    firstName: "Bob",
-    lastName: "Smith",
-    birthDate: "1985-06-20",
-    gender: "MALE",
-    centerId: 2
-  },
-  {
-    id: 3,
-    dni: "003",
-    firstName: "Carol",
-    lastName: "Davis",
-    birthDate: "1992-11-05",
-    gender: "FEMALE",
-    centerId: 1
-  },
-];
-
 export default function PatientsPage() {
-  const [patients, setPatients] = useState(dummyPatients);
   const [formOpen, setFormOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Hooks backend
+  const { data, isLoading, isError, error, refetch } = usePatientsPage({ centerId, page, size: pageSize });
+  const patients = data?.content ?? [];
+  const totalPages = data?.totalPages ?? 0;
+
+  const createMut = useCreatePatient();
+  const updateMut = useUpdatePatient({ id: editForm.id });
+  const deleteMut = useDeletePatient();
 
   const columns = [
     { accessorKey: "id", header: "ID" },
@@ -68,9 +51,14 @@ export default function PatientsPage() {
         <Button size="icon" variant="ghost" onClick={() => { setEditForm(p); setFormOpen(true); }} title="Editar">
           <Pencil className="size-4" />
         </Button>
-        <Button size="icon" variant="ghost" onClick={() => {
-          setPatients(patients.filter(pt => pt.id !== p.id));
-          toast.success("Paciente eliminado");
+        <Button size="icon" variant="ghost" onClick={async () => {
+          try {
+            await deleteMut.mutateAsync(p.id);
+            toast.success("Paciente eliminado");
+            refetch();
+          } catch (e) {
+            toast.error(e?.message || "Error eliminando paciente");
+          }
         }} title="Eliminar">
           <Trash2 className="size-4 text-destructive" />
         </Button>
@@ -78,17 +66,21 @@ export default function PatientsPage() {
     );
   };
 
-  const handleSubmit = () => {
-    if (editForm.id) {
-      setPatients(patients.map(p => (p.id === editForm.id ? editForm : p)));
-      toast.success("Paciente actualizado");
-    } else {
-      const newPatient = { ...editForm, id: Date.now() };
-      setPatients([...patients, newPatient]);
-      toast.success("Paciente creado");
+  const handleSubmit = async () => {
+    try {
+      if (editForm.id) {
+        await updateMut.mutateAsync(editForm);
+        toast.success("Paciente actualizado");
+      } else {
+        await createMut.mutateAsync({ ...editForm, centerId });
+        toast.success("Paciente creado");
+      }
+      setFormOpen(false);
+      setEditForm({});
+      refetch();
+    } catch (e) {
+      toast.error(e?.message || "Error");
     }
-    setFormOpen(false);
-    setEditForm({});
   };
 
   return (
@@ -112,7 +104,17 @@ export default function PatientsPage() {
         columns={columns}
         data={patients}
         rowActions={rowActions}
-        emptyMessage="No hay pacientes"
+        emptyMessage={isLoading ? "Cargando..." : isError ? (error?.message || "Error") : "No hay pacientes"}
+        serverPagination={{
+          pageIndex: page,
+          pageSize,
+          pageCount: totalPages,
+          onPageChange: setPage,
+          onPageSizeChange: (size) => {
+            setPageSize(size);
+            setPage(0);
+          },
+        }}
       />
 
       {/* Modal Crear/Editar */}
@@ -121,7 +123,7 @@ export default function PatientsPage() {
           <DialogHeader>
             <DialogTitle>{editForm.id ? "Editar paciente" : "Nuevo paciente"}</DialogTitle>
           </DialogHeader>
-          <PatientForm value={editForm} onChange={setEditForm} centers={dummyCenters} />
+          <PatientForm value={editForm} onChange={setEditForm} centers={centers} />
           <DialogFooter>
             <Button variant="secondary" onClick={() => setFormOpen(false)}>Cancelar</Button>
             <Button onClick={handleSubmit}>Guardar</Button>
@@ -135,7 +137,7 @@ export default function PatientsPage() {
           <DialogHeader>
             <DialogTitle>Ver paciente</DialogTitle>
           </DialogHeader>
-          <PatientForm value={selectedPatient || {}} readOnly centers={dummyCenters} />
+          <PatientForm value={selectedPatient || {}} readOnly centers={centers} />
           <DialogFooter>
             <Button onClick={() => setViewOpen(false)}>Cerrar</Button>
           </DialogFooter>
