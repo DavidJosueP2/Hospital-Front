@@ -13,6 +13,7 @@ import ResetPassword from "@/pages/auth/ResetPassword";
 import MedicalCentersPage from "@/pages/admin/MedicalCentersPage.jsx";
 import SpecialtiesPage from "@/pages/admin/SpecialtiesPage.jsx";
 import DoctorsPage from "@/pages/admin/DoctorPage.jsx";
+import PatientsPage from "./pages/patients/PatientsPage";
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
                 <Route path="/centers" element={<MedicalCentersPage />} />
                 <Route path="/specialties" element={<SpecialtiesPage />} />
                 <Route path="/doctors" element={<DoctorsPage />} />
+                 <Route path="/patients" element={<PatientsPage />} />
             </Route>
 
           {/* Fallback público */}
