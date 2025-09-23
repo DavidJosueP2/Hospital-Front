@@ -11,6 +11,8 @@ import { ProtectedRoute } from "@/utils/ProtectedRoute";
 import PasswordRecovery from "@/pages/auth/PasswordRecovery";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import MedicalCentersPage from "@/pages/admin/MedicalCentersPage.jsx";
+import SpecialtiesPage from "@/pages/admin/SpecialtiesPage.jsx";
+import DoctorsPage from "@/pages/admin/DoctorPage.jsx";
 
 export default function App() {
   return (
@@ -32,7 +34,9 @@ export default function App() {
             <Route element={<AdminLayout />}>
                 <Route index element={<Navigate to="/playground" replace />} />
                 <Route path="/playground" element={<Playground />} />
-                <Route path="/center" element={<MedicalCentersPage />} />
+                <Route path="/centers" element={<MedicalCentersPage />} />
+                <Route path="/specialties" element={<SpecialtiesPage />} />
+                <Route path="/doctors" element={<DoctorsPage />} />
             </Route>
 
           {/* Fallback público */}
