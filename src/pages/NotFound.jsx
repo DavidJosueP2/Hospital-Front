@@ -33,16 +33,16 @@ export default function NotFound() {
                 </p>
 
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                    <Button variant="outline" className="gap-2" onClick={() => navigate(-1)}>
+                        <ArrowLeft className="size-4" />
+                        <span>Volver</span>
+                    </Button>
+
                     <Button asChild className="gap-2">
                         <Link to="/admin">
                             <Home className="size-4" />
                             <span>Ir al Dashboard</span>
                         </Link>
-                    </Button>
-
-                    <Button variant="outline" className="gap-2" onClick={() => navigate(-1)}>
-                        <ArrowLeft className="size-4" />
-                        <span>Volver</span>
                     </Button>
 
                     <Button asChild variant="ghost" className="gap-2">

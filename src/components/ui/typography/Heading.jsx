@@ -1,13 +1,5 @@
-// src/components/ui/typography/Heading.jsx
 import React from "react";
 import { Separator } from "@/components/ui/shadcn/separator";
-
-/**
- * Títulos profesionales con estética clínica (turquesa pastel), listos para dark/light.
- * - PageHeading: bloque hero con icono opcional, kicker, título y acciones.
- * - SectionHeading: encabezado de sección con barra/acento.
- * - SubSectionHeading: subtítulo compacto con marcador sutil.
- */
 
 export function PageHeading({
                                 title,
@@ -26,9 +18,7 @@ export function PageHeading({
                 className,
             ].join(" ")}
         >
-            {/* Fondo decorativo suave */}
             <div className="pointer-events-none absolute inset-0 -z-10 bg-surface-gradient" />
-            {/* Halo diagonal muy sutil */}
             <div className="pointer-events-none absolute -right-24 -top-24 -z-10 h-64 w-64 rounded-full bg-brand-3/30 blur-3xl dark:bg-brand-3/20" />
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -54,7 +44,9 @@ export function PageHeading({
                         <h1
                             className={[
                                 "text-balance text-2xl font-semibold tracking-tight md:text-3xl",
-                                "bg-[linear-gradient(135deg,var(--brand-1),var(--brand-2))] bg-clip-text text-transparent",
+                                "text-foreground",
+                                "supports-[background-clip:text]:bg-[linear-gradient(135deg,var(--brand-1),var(--brand-2))]",
+                                "supports-[background-clip:text]:bg-clip-text supports-[background-clip:text]:text-transparent",
                             ].join(" ")}
                         >
                             {title}
