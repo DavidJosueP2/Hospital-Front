@@ -138,15 +138,18 @@ export default function SpecialtiesPage() {
         setEditErrors({});
         setEditPending(true);
         try {
-            const etag = specialties.getStoredEtag(editId);
-            const res = await specialties.updateSpecialty(editId, editForm, { ifMatch: etag });
+            const res = await specialties.updateSpecialty(editId, editForm);
             toast.success("Especialidad actualizada", { description: res?.data?.name });
             setEditOpen(false);
             await load();
         } catch (e) {
-            const fieldErrs = specialties.parseFieldErrors(e);
-            if (Object.keys(fieldErrs).length) setEditErrors(fieldErrs);
-            toast.error(e?.message || "Error");
+            if (e?.status === 409) {
+                toast.error("Esta especialidad fue modificada por otro usuario. Refresca los datos e inténtalo de nuevo.");
+            } else {
+                const fieldErrs = specialties.parseFieldErrors(e);
+                if (Object.keys(fieldErrs).length) setEditErrors(fieldErrs);
+                toast.error(e?.message || "Error");
+            }
         } finally {
             setEditPending(false);
         }

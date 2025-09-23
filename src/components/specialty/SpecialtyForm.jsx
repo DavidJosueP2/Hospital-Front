@@ -3,51 +3,58 @@ import { Input } from "@/components/ui/shadcn/input";
 import { Label } from "@/components/ui/shadcn/label";
 import { Textarea } from "@/components/ui/shadcn/textarea";
 
-const maxLen = { name: 100, description: 1000 };
-
-const validateField = (field, v) => {
-    const val = (v ?? "").trim();
-    if (field === "name") {
-        if (!val) return "El nombre es obligatorio";
-        if (val.length > maxLen.name) return "Máximo 100 caracteres";
-    }
-    if (field === "description") {
-        if (val.length > maxLen.description) return "Máximo 1000 caracteres";
-    }
-    return "";
-};
-
 export default function SpecialtyForm({ value, onChange, errors = {}, onValidityChange }) {
-    const [localErrors, setLocalErrors] = React.useState({ name: "", description: "" });
     const [touched, setTouched] = React.useState({ name: false, description: false });
-
-    const setField = (field, val) => {
-        const next = { ...value, [field]: val };
-        onChange(next);
-        const msg = validateField(field, val);
-        setLocalErrors((e) => ({ ...e, [field]: msg }));
-    };
-
-    const onBlur = (field) => {
-        setTouched((t) => ({ ...t, [field]: true }));
-        const msg = validateField(field, value[field]);
-        setLocalErrors((e) => ({ ...e, [field]: msg }));
-    };
-
-    const mergedErrors = {
-        name: errors.name || localErrors.name,
-        description: errors.description || localErrors.description,
-    };
-
-    const isValid =
-        !mergedErrors.name &&
-        !mergedErrors.description &&
-        (value.name ?? "").trim() !== "" &&
-        (value.description ?? "").length <= maxLen.description;
+    const [clientErrs, setClientErrs] = React.useState({ name: "", description: "" });
+    const [serverErrs, setServerErrs] = React.useState({ name: "", description: "" });
 
     React.useEffect(() => {
-        if (typeof onValidityChange === "function") onValidityChange(!!isValid);
-    }, [isValid, onValidityChange]);
+        setServerErrs({
+            name: errors?.name || "",
+            description: errors?.description || "",
+        });
+    }, [errors]);
+
+    const v = (k) => (typeof value?.[k] === "string" ? value[k] : "");
+
+    const validateField = (field, val) => {
+        const s = (val ?? "").trim();
+        if (field === "name") {
+            if (!s) return "Ingresa el nombre de la especialidad.";
+            if (s.length > 100) return "El nombre no puede superar 100 caracteres.";
+        }
+        if (field === "description") {
+            if (s.length > 1000) return "La descripción no puede superar 1000 caracteres.";
+        }
+        return "";
+    };
+
+    const recomputeValidity = (nextVal, nextClientErrs, nextServerErrs) => {
+        const empty = !nextVal.name?.trim();
+        const hasClient = Object.values(nextClientErrs).some(Boolean);
+        const hasServer = Object.values(nextServerErrs).some(Boolean);
+        onValidityChange?.(!empty && !hasClient && !hasServer);
+    };
+
+    const handleChange = (field, val) => {
+        const nextVal = { ...value, [field]: val };
+        onChange(nextVal);
+        const nextClient = { ...clientErrs, [field]: validateField(field, val) };
+        setClientErrs(nextClient);
+        const nextServer = { ...serverErrs, [field]: "" };
+        setServerErrs(nextServer);
+        recomputeValidity(nextVal, nextClient, nextServer);
+    };
+
+    const handleBlur = (field) => {
+        const nextTouched = { ...touched, [field]: true };
+        setTouched(nextTouched);
+        const nextClient = { ...clientErrs, [field]: validateField(field, v(field)) };
+        setClientErrs(nextClient);
+        recomputeValidity(value, nextClient, serverErrs);
+    };
+
+    const msg = (field) => serverErrs[field] || (touched[field] && clientErrs[field]) || "";
 
     return (
         <div className="grid gap-4">
@@ -55,33 +62,25 @@ export default function SpecialtyForm({ value, onChange, errors = {}, onValidity
                 <Label htmlFor="name">Nombre</Label>
                 <Input
                     id="name"
-                    value={value.name}
-                    onChange={(e) => setField("name", e.target.value)}
-                    onBlur={() => onBlur("name")}
-                    aria-invalid={!!mergedErrors.name}
+                    value={v("name")}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    onBlur={() => handleBlur("name")}
+                    aria-invalid={!!msg("name")}
                 />
-                {(touched.name || errors.name) && mergedErrors.name ? (
-                    <p className="text-xs text-destructive">{mergedErrors.name}</p>
-                ) : null}
+                {msg("name") ? <p className="text-xs text-destructive">{msg("name")}</p> : null}
             </div>
 
             <div className="grid gap-2">
                 <Label htmlFor="description">Descripción</Label>
                 <Textarea
                     id="description"
-                    value={value.description}
-                    onChange={(e) => setField("description", e.target.value)}
-                    onBlur={() => onBlur("description")}
-                    aria-invalid={!!mergedErrors.description}
+                    value={v("description")}
+                    onChange={(e) => handleChange("description", e.target.value)}
+                    onBlur={() => handleBlur("description")}
+                    aria-invalid={!!msg("description")}
                     rows={4}
-                    placeholder="Opcional"
                 />
-                {(touched.description || errors.description) && mergedErrors.description ? (
-                    <p className="text-xs text-destructive">{mergedErrors.description}</p>
-                ) : null}
-                <div className="text-[11px] text-muted-foreground text-right">
-                    {(value.description ?? "").length}/{maxLen.description}
-                </div>
+                {msg("description") ? <p className="text-xs text-destructive">{msg("description")}</p> : null}
             </div>
         </div>
     );
