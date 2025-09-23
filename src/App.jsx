@@ -7,6 +7,7 @@ import AuthLayout from "@/pages/auth/AuthLayour";
 import Login from "@/pages/auth/Login";
 import ErrorBoundary from "@/utils/ErrorBoundary";
 import { AuthProvider } from "@/context/AuthContext";
+import { ProtectedRoute } from "@/utils/ProtectedRoute";
 
 export default function App() {
   return (
@@ -19,9 +20,11 @@ export default function App() {
           </Route>
 
           {/* Rutas dentro del layout de administración */}
-          <Route element={<AdminLayout />}>
-            <Route index element={<Navigate to="/playground" replace />} />
-            <Route path="/playground" element={<Playground />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route index element={<Navigate to="/playground" replace />} />
+              <Route path="/playground" element={<Playground />} />
+            </Route>
           </Route>
 
           {/* Fallback público */}

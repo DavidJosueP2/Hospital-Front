@@ -1,22 +1,26 @@
 import api from "./api";
+import { setAccessToken, clearTokens } from "../utils/tokenStorage";
 
 const baseUrl = import.meta.env.VITE_API_URL;
 
 const authService = {
   // Login con DNI y contraseña
   login: async (dni, password) => {
-    const response = await fetch(`${baseUrl}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username: dni, password }),
+    const response = await api.post(`${baseUrl}/auth/login`, {
+      username: dni,
+      password,
     });
-    return await response.json();
+
+    if (response.data?.token) {
+      setAccessToken(response.data.token);
+    }
+
+    return response.data;
   },
 
   // Logout (solo cliente, no llama backend)
   logout: async () => {
+    clearTokens();
     return { success: true };
   },
 
