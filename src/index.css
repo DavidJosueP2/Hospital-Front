@@ -40,6 +40,18 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+
+    --brand-1: oklch(0.78 0.09 210);
+    --brand-2: oklch(0.72 0.08 245);
+    --brand-3: oklch(0.92 0.03 210);
+    --brand: var(--brand-1);
+    --brand-contrast: oklch(0.985 0 0);
+
+    --color-brand: var(--brand-1);
+    --color-brand-1: var(--brand-1);
+    --color-brand-2: var(--brand-2);
+    --color-brand-3: var(--brand-3);
+    --color-brand-contrast: var(--brand-contrast);
 }
 
 @theme inline {
@@ -117,6 +129,12 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+
+    --brand-1: oklch(0.74 0.09 210);
+    --brand-2: oklch(0.68 0.08 245);
+    --brand-3: oklch(0.28 0.03 210);
+    --brand: var(--brand-1);
+    --brand-contrast: oklch(0.985 0 0);
 }
 
 @layer base {
@@ -136,4 +154,19 @@ body {
     display: block !important;
     place-items: initial !important;
     min-height: 100vh;
+}
+
+@layer utilities {
+    .bg-brand-gradient {
+        background: linear-gradient(135deg, var(--brand-1), var(--brand-2));
+    }
+    .bg-surface-gradient {
+        background:
+                radial-gradient(1200px 400px at 100% -20%, color-mix(in oklab, var(--brand-2), transparent 85%) 0%, transparent 60%),
+                linear-gradient(180deg, color-mix(in oklab, var(--card), transparent 0%) 0%, color-mix(in oklab, var(--card), transparent 10%) 100%);
+    }
+    .text-brand { color: var(--brand-1); }
+    .text-brand-contrast { color: var(--brand-contrast); }
+    .ring-brand { --tw-ring-color: color-mix(in oklab, var(--brand-1), transparent 40%); }
+    .card-glass { backdrop-filter: saturate(120%) blur(6px); }
 }

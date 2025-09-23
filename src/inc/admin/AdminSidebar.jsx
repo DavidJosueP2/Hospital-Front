@@ -65,7 +65,7 @@ export default function AdminSidebar() {
             { to: "/admin/centers", icon: Building2, label: "Centros médicos" },
             { to: "/admin/consultations", icon: ClipboardList, label: "Consultas médicas" },
         ],
-        docs: [{ to: "/admin/docs", icon: BookText, label: "Guías & Manuales" }],
+        docs: [{ to: "/docs", icon: BookText, label: "Guías & Manuales" }],
     };
 
     return (
