@@ -26,8 +26,8 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-/** Ítem reutilizable: centra ícono cuando el sidebar está colapsado */
-function NavItem({ to, icon: Icon, label, className = "" }) {
+/** Ítem reutilizable con estado activo elegante */
+function NavItem({ to, icon: Icon, label, className = "", end = false }) {
     const { state } = useSidebar();
     const collapsed = state === "collapsed";
 
@@ -40,9 +40,29 @@ function NavItem({ to, icon: Icon, label, className = "" }) {
             >
                 <NavLink
                     to={to}
-                    className="w-full data-[active=true]:bg-accent data-[active=true]:text-accent-foreground"
+                    end={end}
+                    className={[
+                        // base
+                        "relative w-full flex items-center gap-2 rounded-lg px-2 py-2 transition-colors",
+                        "hover:bg-muted/60 text-foreground/90",
+                        // activo (NavLink añade aria-current="page")
+                        "aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:ring-1 aria-[current=page]:ring-brand/20",
+                        // barrita izquierda sutil
+                        !collapsed
+                            ? "aria-[current=page]:before:absolute aria-[current=page]:before:left-[-6px] aria-[current=page]:before:top-1/2 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:h-5 aria-[current=page]:before:w-[3px] aria-[current=page]:before:rounded-full aria-[current=page]:before:bg-brand"
+                            : "",
+                    ].join(" ")}
                 >
-                    <Icon className="size-4 shrink-0" />
+          <span
+              className={[
+                  "grid size-7 place-content-center shrink-0 rounded-md",
+                  "bg-transparent",
+                  "hover:bg-brand-1/25",
+                  "aria-[current=page]:bg-brand-1/40",
+              ].join(" ")}
+          >
+            <Icon className="size-4 shrink-0" />
+          </span>
                     {!collapsed && <span className="truncate">{label}</span>}
                 </NavLink>
             </SidebarMenuButton>
@@ -50,27 +70,28 @@ function NavItem({ to, icon: Icon, label, className = "" }) {
     );
 }
 
+
 export default function AdminSidebar() {
     const { state } = useSidebar();
     const collapsed = state === "collapsed";
 
     const MENU = {
         home: [{ to: "/admin", icon: Heart, label: "Dashboard" }],
-        platform: [{ to: "/admin/playground", icon: FolderKanban, label: "Playground" }],
+        platform: [{ to: "/playground", icon: FolderKanban, label: "Playground" }],
         clinic: [
-            { to: "/admin/employees", icon: UserCog, label: "Empleados" },
-            { to: "/admin/doctors", icon: Stethoscope, label: "Doctores" },
-            { to: "/admin/patients", icon: UserRound, label: "Pacientes" },
-            { to: "/admin/specialties", icon: ClipboardList, label: "Especialidades" },
-            { to: "/admin/centers", icon: Building2, label: "Centros médicos" },
-            { to: "/admin/consultations", icon: ClipboardList, label: "Consultas médicas" },
+            { to: "/employees", icon: UserCog, label: "Empleados" },
+            { to: "/doctors", icon: Stethoscope, label: "Doctores" },
+            { to: "/patients", icon: UserRound, label: "Pacientes" },
+            { to: "/specialties", icon: ClipboardList, label: "Especialidades" },
+            { to: "/centers", icon: Building2, label: "Centros médicos" },
+            { to: "/consultations", icon: ClipboardList, label: "Consultas médicas" },
         ],
         docs: [{ to: "/docs", icon: BookText, label: "Guías & Manuales" }],
     };
 
     return (
-        <Sidebar collapsible="icon" className="border-r overflow-hidden">
-            {/* Header: centra el logo cuando está colapsado */}
+        <Sidebar collapsible="icon" className="sidebar-surface border-r overflow-hidden">
+        {/* Header: centra el logo cuando está colapsado */}
             <SidebarHeader className="px-4 py-3">
                 <NavLink
                     to="/admin"
@@ -103,7 +124,7 @@ export default function AdminSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                <SidebarSeparator />
+                <SidebarSeparator className="sidebar-divider" />
 
                 <SidebarGroup>
                     <SidebarGroupLabel>Plataforma</SidebarGroupLabel>
@@ -116,7 +137,7 @@ export default function AdminSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                <SidebarSeparator />
+                <SidebarSeparator className="sidebar-divider" />
 
                 <SidebarGroup>
                     <SidebarGroupLabel>Gestión clínica</SidebarGroupLabel>
@@ -129,7 +150,7 @@ export default function AdminSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                <SidebarSeparator />
+                <SidebarSeparator className="sidebar-divider" />
 
                 <SidebarGroup>
                     <SidebarGroupLabel>Documentación</SidebarGroupLabel>

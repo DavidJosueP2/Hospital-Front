@@ -1,11 +1,13 @@
 import React from "react";
 import { Separator } from "@/components/ui/shadcn/separator";
+import { Stars } from "lucide-react";
 
 export function PageHeading({
                                 title,
                                 subtitle,
                                 kicker,
-                                icon: Icon,
+                                icon: Icon,                 // icono grande opcional a la izquierda del bloque
+                                titleIcon: TitleIcon = Stars, // icono en burbuja a la izquierda del TÍTULO
                                 actions,
                                 className = "",
                                 children,
@@ -13,21 +15,25 @@ export function PageHeading({
     return (
         <div
             className={[
-                "relative overflow-hidden rounded-2xl border bg-card/70 card-glass",
-                "px-5 py-5 md:px-8 md:py-7",
+                "relative w-full overflow-hidden hero-surface",
+                "px-6 py-10 sm:px-10 md:py-12 lg:px-14",
+                "bg-hero-mint",
                 className,
             ].join(" ")}
         >
-            <div className="pointer-events-none absolute inset-0 -z-10 bg-surface-gradient" />
-            <div className="pointer-events-none absolute -right-24 -top-24 -z-10 h-64 w-64 rounded-full bg-brand-3/30 blur-3xl dark:bg-brand-3/20" />
+            <div className="pointer-events-none absolute inset-0 glass-edge" />
+            <div className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full"
+                 style={{ backgroundImage: "radial-gradient(closest-side, color-mix(in oklab, var(--brand-2), white 30%) 0%, transparent 70%)" }} />
+            <div className="pointer-events-none absolute -bottom-28 -right-28 h-96 w-96 rounded-full"
+                 style={{ backgroundImage: "radial-gradient(closest-side, color-mix(in oklab, var(--brand-3), white 30%) 0%, transparent 70%)" }} />
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div className="flex min-w-0 items-start gap-3">
                     {Icon ? (
                         <div
                             className={[
                                 "grid size-12 place-content-center shrink-0 rounded-xl shadow-sm",
-                                "ring-1 ring-brand/25 bg-brand-gradient text-brand-contrast",
+                                "ring-1 ring-black/5 bg-white/60 text-foreground dark:bg-white/10 dark:ring-white/10",
                             ].join(" ")}
                         >
                             <Icon className="size-5" />
@@ -36,37 +42,36 @@ export function PageHeading({
 
                     <div className="min-w-0">
                         {kicker ? (
-                            <div className="mb-1 text-xs font-medium uppercase tracking-widest text-brand">
+                            <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground/70">
                                 {kicker}
                             </div>
                         ) : null}
 
-                        <h1
-                            className={[
-                                "text-balance text-2xl font-semibold tracking-tight md:text-3xl",
-                                "text-foreground",
-                                "supports-[background-clip:text]:bg-[linear-gradient(135deg,var(--brand-1),var(--brand-2))]",
-                                "supports-[background-clip:text]:bg-clip-text supports-[background-clip:text]:text-transparent",
-                            ].join(" ")}
-                        >
-                            {title}
-                        </h1>
+                        <div className="flex items-center gap-3">
+                            {TitleIcon ? (
+                                <span className="title-bubble size-9">
+                  <TitleIcon className="size-5" />
+                </span>
+                            ) : null}
+
+                            <h1 className="text-3xl font-extrabold tracking-tight leading-tight md:text-4xl text-foreground">
+                                {title}
+                            </h1>
+                        </div>
 
                         {subtitle ? (
-                            <p className="mt-1 max-w-prose text-sm text-muted-foreground">{subtitle}</p>
+                            <p className="mt-2 max-w-prose text-sm md:text-base text-foreground/75">{subtitle}</p>
                         ) : null}
                     </div>
                 </div>
 
-                {actions ? (
-                    <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>
-                ) : null}
+                {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
             </div>
 
-            {children ? <div className="mt-4">{children}</div> : null}
+            {children ? <div className="relative z-10 mt-5">{children}</div> : null}
 
-            <div className="mt-5">
-                <Separator className="h-[1px] bg-gradient-to-r from-transparent via-[color-mix(in_oklab,var(--brand-1),transparent_60%)] to-transparent" />
+            <div className="relative z-10 mt-6">
+                <Separator className="h-[1px] bg-gradient-to-r from-transparent via-[color-mix(in_oklab,var(--brand),transparent_70%)] to-transparent" />
             </div>
         </div>
     );
@@ -78,11 +83,11 @@ export function SectionHeading({ title, subtitle, icon: Icon, className = "", ac
             <div className="min-w-0">
                 <div className="flex items-center gap-2">
                     {Icon ? (
-                        <span className="grid size-7 place-content-center rounded-lg bg-brand-3/50 text-brand ring-1 ring-brand/20">
+                        <span className="grid size-7 place-content-center rounded-lg bg-brand-1/60 text-foreground ring-1 ring-black/5">
               <Icon className="size-4" />
             </span>
                     ) : (
-                        <span className="h-2.5 w-2.5 rounded-full bg-brand shadow-[0_0_0_4px] shadow-[color-mix(in_oklab,var(--brand-1),transparent_80%)]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-brand shadow-[0_0_0_4px] shadow-[color-mix(in_oklab,var(--brand),transparent_80%)]" />
                     )}
                     <h2 className="text-lg font-semibold leading-none tracking-tight text-foreground/95">
                         {title}
@@ -103,7 +108,7 @@ export function SubSectionHeading({ title, subtitle, className = "" }) {
         <div className={["mb-2", className].join(" ")}>
             <div className="flex items-center gap-2">
                 <span className="h-1.5 w-6 rounded-full bg-brand" />
-                <h3 className="text-base font-medium leading-none tracking-tight">{title}</h3>
+                <h3 className="text-base font-semibold leading-none tracking-tight">{title}</h3>
             </div>
             {subtitle ? (
                 <p className="ml-8 mt-1 text-xs text-muted-foreground">{subtitle}</p>
