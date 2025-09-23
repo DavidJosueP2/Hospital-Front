@@ -7,24 +7,44 @@ const authService = {
   // Login con DNI y contraseña
   login: async (identifier, password) => {
     try {
-      const response = await api.post(`${baseUrl}/auth/login`, {
-        username: identifier,
-        password,
+      const response = await fetch(`${baseUrl}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: identifier,
+          password,
+        }),
       });
 
-      if (response.data?.token) {
-        setAccessToken(response.data.token);
-        return { success: true, ...response.data };
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        // Caso: credenciales inválidas (401)
+        if (response.status === 401) {
+          return {
+            success: false,
+            message: data.message || "Credenciales inválidas",
+          };
+        }
+
+        // Otros errores del servidor
+        return {
+          success: false,
+          message: data.message || "Error en el servidor",
+        };
+      }
+
+      // Caso: login exitoso
+      if (data?.token) {
+        setAccessToken(data.token);
+        return { success: true, ...data };
       }
 
       return { success: false, message: "No se recibió token válido" };
     } catch (err) {
-      if (err.response?.status === 401) {
-        return { success: false, message: "Credenciales inválidas" };
-      }
-      if (err.response) {
-        return { success: false, message: "Error del servidor" };
-      }
+      console.error("Error en login (fetch):", err);
       return { success: false, message: "Error de red. Verifica tu conexión" };
     }
   },

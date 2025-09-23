@@ -49,7 +49,6 @@ function LoginFormComponent() {
         setErrors({ general: result.message });
       }
     } catch (error) {
-      console.error("Error en login:", error);
       setErrors({ general: "Error en el servidor. Intenta más tarde." });
     }
   };
