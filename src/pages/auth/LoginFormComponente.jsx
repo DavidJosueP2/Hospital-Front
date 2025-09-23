@@ -42,14 +42,14 @@ function LoginFormComponent() {
 
     try {
       const result = await login(identifier, password);
+
       if (result.success) {
         navigate("/", { replace: true });
       } else {
-        setErrors({ general: "Credenciales inválidas" });
+        setErrors({ general: result.message });
       }
-    } catch (err) {
-      console.error("Login error:", err);
-      setErrors({ general: "Error al iniciar sesión" });
+    } catch (error) {
+      setErrors({ general: "Error en el servidor. Intenta más tarde." });
     }
   };
 
