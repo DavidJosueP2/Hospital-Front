@@ -13,10 +13,28 @@ import EditDoctorDialog from "@/components/doctor/EditDoctorDialog";
 
 const columns = [
     { accessorKey: "id", header: "ID", size: 72, cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span> },
-    { accessorKey: "userId", header: "Usuario ID", size: 96, cell: ({ row }) => <span className="tabular-nums">{row.original.userId}</span> },
+
+    {
+        id: "user",
+        header: "Usuario",
+        cell: ({ row }) => {
+            const d = row.original;
+            const title = d.gender === "FEMALE" ? "Dra." : "Dr.";
+            const fullName = [d.firstName, d.lastName].filter(Boolean).join(" ") || d.username;
+            return (
+                <div className="leading-snug">
+                    <div className="font-medium">{title} {fullName}</div>
+                    <div className="text-xs text-muted-foreground">C.I. {d.username}</div>
+                </div>
+            );
+        },
+    },
+
     { accessorKey: "specialtyName", header: "Especialidad", cell: ({ row }) => row.original.specialtyName || "—" },
-    { accessorKey: "updatedAt", header: "Actualizado", size: 120, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString() },
+    { accessorKey: "createdAt", header: "Creado", size: 140, cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
+    { accessorKey: "updatedAt", header: "Actualizado", size: 140, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString() },
 ];
+
 
 export default function DoctorsPage() {
     const [includeDeleted, setIncludeDeleted] = React.useState(false);
