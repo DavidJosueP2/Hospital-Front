@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/shadcn/input";
 import { Label } from "@/components/ui/shadcn/label";
 import { Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/shadcn/separator";
-import {Combobox} from "@/components/ui/inputs/combobox";
+import { Combobox } from "@/components/ui/inputs/combobox";
 import doctors from "@/services/doctors.service";
 import specialties from "@/services/specialties.service";
 import medicalCenters from "@/services/medicalCenters.service";
@@ -41,6 +41,27 @@ const emailErr = (v) => {
     return "";
 };
 
+// --- NUEVO: validador de cédula ecuatoriana ---
+const cedulaErr = (v) => {
+    const s = String(v ?? "").trim();
+    if (!s) return "Ingresa una cédula ecuatoriana.";
+    if (!/^\d{10}$/.test(s)) return "La cédula debe tener 10 dígitos.";
+    const prov = Number(s.slice(0, 2));
+    if (prov < 1 || prov > 24) return "La cédula tiene un código de provincia inválido.";
+    const tercer = Number(s[2]);
+    if (tercer >= 6) return "La cédula no corresponde a una persona natural.";
+    const coef = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+    let suma = 0;
+    for (let i = 0; i < 9; i++) {
+        let prod = Number(s[i]) * coef[i];
+        if (prod >= 10) prod -= 9;
+        suma += prod;
+    }
+    const verif = (10 - (suma % 10)) % 10;
+    if (verif !== Number(s[9])) return "La cédula no supera la validación.";
+    return "";
+};
+
 export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
     const [mode, setMode] = React.useState("associate"); // "associate" | "register"
     const [pending, setPending] = React.useState(false);
@@ -57,7 +78,7 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
 
     // REGISTER
     const [registerForm, setRegisterForm] = React.useState({
-        username: "",
+        username: "", // UI: Cédula
         email: "",
         password: "",
         gender: "",
@@ -217,9 +238,8 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
     const validateRegisterField = (field, value) => {
         const s = typeof value === "string" ? value.trim() : value;
         switch (field) {
-            case "username":
-                if (!s) return "Ingresa un nombre de usuario.";
-                return "";
+            case "username": // UI: Cédula
+                return cedulaErr(s);
             case "email":
                 return emailErr(s);
             case "password":
@@ -251,9 +271,14 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
         "";
 
     const onRegisterChange = (field, value) => {
-        const next = { ...registerForm, [field]: value };
+        // Para CÉDULA, permitimos solo dígitos y máx 10
+        let val = value;
+        if (field === "username") {
+            val = String(value || "").replace(/\D+/g, "").slice(0, 10);
+        }
+        const next = { ...registerForm, [field]: val };
         setRegisterForm(next);
-        const clientMsg = validateRegisterField(field, value);
+        const clientMsg = validateRegisterField(field, val);
         setRegisterClientErrs((e) => ({ ...e, [field]: clientMsg }));
         if (registerServerErrs[field]) setRegisterServerErrs((e) => ({ ...e, [field]: "" }));
     };
@@ -301,6 +326,7 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
                 if (Object.values(errs).some(Boolean)) throw { message: "Revisa los campos resaltados." };
 
                 const res = await doctors.registerDoctor({
+                    // Enviamos "username" como tu backend espera, aunque sea la cédula
                     username: registerForm.username.trim(),
                     email: registerForm.email.trim(),
                     password: registerForm.password,
@@ -399,7 +425,6 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
                                     options={spOptions}
                                     value={associateForm.specialtyId}
                                     onChange={(v) => onAssociateChange("specialtyId", v)}
-                                    // Si tu Combobox no dispara blur, el error se mostrará al intentar guardar
                                 />
                                 {associateMsg("specialtyId") ? <p className="text-xs text-destructive">{associateMsg("specialtyId")}</p> : null}
                             </div>
@@ -408,14 +433,17 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
                         <div className="grid gap-6 md:grid-cols-2">
                             <div className="grid gap-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="username">Usuario</Label>
+                                    {/* UI: Cédula, pero el id/clave siguen como username */}
+                                    <Label htmlFor="username">Cédula</Label>
                                     <Input
                                         id="username"
+                                        inputMode="numeric"
+                                        maxLength={10}
                                         value={registerForm.username}
                                         onChange={(e) => onRegisterChange("username", e.target.value)}
                                         onBlur={() => onRegisterBlur("username")}
                                         aria-invalid={!!registerMsg("username")}
-                                        placeholder="usuario o username"
+                                        placeholder="Ej. 1718137159"
                                     />
                                     {registerMsg("username") ? <p className="text-xs text-destructive">{registerMsg("username")}</p> : null}
                                 </div>
@@ -443,6 +471,7 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
                                         onChange={(e) => onRegisterChange("password", e.target.value)}
                                         onBlur={() => onRegisterBlur("password")}
                                         aria-invalid={!!registerMsg("password")}
+                                        placeholder="Mínimo 8 caracteres"
                                     />
                                     {registerMsg("password") ? <p className="text-xs text-destructive">{registerMsg("password")}</p> : null}
                                 </div>
@@ -467,6 +496,7 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
                                         onChange={(e) => onRegisterChange("firstName", e.target.value)}
                                         onBlur={() => onRegisterBlur("firstName")}
                                         aria-invalid={!!registerMsg("firstName")}
+                                        placeholder="Ej. Ana María"
                                     />
                                     {registerMsg("firstName") ? <p className="text-xs text-destructive">{registerMsg("firstName")}</p> : null}
                                 </div>
@@ -479,6 +509,7 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
                                         onChange={(e) => onRegisterChange("lastName", e.target.value)}
                                         onBlur={() => onRegisterBlur("lastName")}
                                         aria-invalid={!!registerMsg("lastName")}
+                                        placeholder="Ej. Pérez Gómez"
                                     />
                                     {registerMsg("lastName") ? <p className="text-xs text-destructive">{registerMsg("lastName")}</p> : null}
                                 </div>
@@ -489,6 +520,7 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
                                         options={centerOptions}
                                         value={registerForm.centerId}
                                         onChange={(v) => onRegisterChange("centerId", v)}
+                                        // Si tu Combobox soporta placeholder, podrías pasar: placeholder="Selecciona un centro"
                                     />
                                     {registerMsg("centerId") ? <p className="text-xs text-destructive">{registerMsg("centerId")}</p> : null}
                                 </div>
@@ -499,6 +531,7 @@ export default function CreateDoctorDialog({ open, onOpenChange, onSuccess }) {
                                         options={spOptions}
                                         value={registerForm.specialtyId}
                                         onChange={(v) => onRegisterChange("specialtyId", v)}
+                                        // placeholder="Selecciona una especialidad"
                                     />
                                     {registerMsg("specialtyId") ? <p className="text-xs text-destructive">{registerMsg("specialtyId")}</p> : null}
                                 </div>

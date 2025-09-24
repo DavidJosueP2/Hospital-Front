@@ -64,7 +64,7 @@ api.interceptors.response.use(
       "Ha ocurrido un error inesperado";
 
     // Manejo específico para código 409 (Conflict)
-    if (error.response.status === 409) {
+    if (error.response.status === 409 && !errorMessage) {
       errorMessage = "Error de conflicto.";
     }
 

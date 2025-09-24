@@ -11,14 +11,17 @@ import { PageHeading } from "@/components/ui/typography/Heading";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import CenterForm from "@/components/medicalCenter/CenterForm";
 import medicalCenters from "@/services/medicalCenters.service";
+import PageMeta from "@/inc/seo/PageMeta.jsx";
 
 const columns = [
     { accessorKey: "id", header: "ID", size: 72, cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span> },
     { accessorKey: "name", header: "Nombre", cell: ({ row }) => <span className="font-medium">{row.original.name}</span> },
     { accessorKey: "city", header: "Ciudad", cell: ({ row }) => row.original.city },
     { accessorKey: "address", header: "Dirección", cell: ({ row }) => <span className="text-muted-foreground">{row.original.address}</span> },
-    { accessorKey: "updatedAt", header: "Actualizado", size: 120, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString() },
+    { accessorKey: "createdAt", header: "Creado", size: 140, cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
+    { accessorKey: "updatedAt", header: "Actualizado", size: 140, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString() },
 ];
+
 
 export default function MedicalCentersPage() {
     const [includeDeleted, setIncludeDeleted] = React.useState(false);
@@ -129,6 +132,7 @@ export default function MedicalCentersPage() {
 
     return (
         <div className="space-y-6">
+            <PageMeta title="Centros Médicos" description="Gestión de centros médicos" />
             <PageHeading
                 title="Centros Médicos"
                 subtitle="Crear, actualizar y gestionar centros"

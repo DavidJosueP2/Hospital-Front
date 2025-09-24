@@ -25,8 +25,8 @@ import {
     ClipboardList,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import logoUrl from "@/assets/favicon.ico";
 
-/** Ítem reutilizable con estado activo elegante */
 function NavItem({ to, icon: Icon, label, className = "", end = false }) {
     const { state } = useSidebar();
     const collapsed = state === "collapsed";
@@ -41,27 +41,27 @@ function NavItem({ to, icon: Icon, label, className = "", end = false }) {
                 <NavLink
                     to={to}
                     end={end}
+                    aria-label={label}
                     className={[
-                        // base
-                        "relative w-full flex items-center gap-2 rounded-lg px-2 py-2 transition-colors",
-                        "hover:bg-muted/60 text-foreground/90",
-                        // activo (NavLink añade aria-current="page")
-                        "aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:ring-1 aria-[current=page]:ring-brand/20",
-                        // barrita izquierda sutil
-                        !collapsed
-                            ? "aria-[current=page]:before:absolute aria-[current=page]:before:left-[-6px] aria-[current=page]:before:top-1/2 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:h-5 aria-[current=page]:before:w-[3px] aria-[current=page]:before:rounded-full aria-[current=page]:before:bg-brand"
-                            : "",
+                        "group", // 👈 habilita group-aria para hijos
+                        collapsed
+                            ? "relative w-full grid place-items-center rounded-lg px-0 py-0.5"
+                            : "relative w-full flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted/60 text-foreground/90 aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:ring-1 aria-[current=page]:ring-brand/20 aria-[current=page]:before:absolute aria-[current=page]:before:left-[-6px] aria-[current=page]:before:top-1/2 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:h-5 aria-[current=page]:before:w-[3px] aria-[current=page]:before:rounded-full aria-[current=page]:before:bg-brand",
                     ].join(" ")}
                 >
           <span
               className={[
-                  "grid size-7 place-content-center shrink-0 rounded-md",
-                  "bg-transparent",
-                  "hover:bg-brand-1/25",
-                  "aria-[current=page]:bg-brand-1/40",
+                  collapsed
+                      ? "grid size-7 place-content-center shrink-0 rounded-md mx-0 my-0"
+                      : "grid size-7 place-content-center shrink-0 rounded-md",
+                  "bg-transparent hover:bg-brand-1/25",
+                  // 👇 activo en COLAPSADO: pinta sólo el tile del icono
+                  collapsed
+                      ? "group-aria-[current=page]:bg-accent group-aria-[current=page]:text-accent-foreground"
+                      : "aria-[current=page]:bg-brand-1/40",
               ].join(" ")}
           >
-            <Icon className="size-4 shrink-0" />
+            <Icon className={collapsed ? "size-3.5 shrink-0" : "size-4 shrink-0"} />
           </span>
                     {!collapsed && <span className="truncate">{label}</span>}
                 </NavLink>
@@ -91,95 +91,91 @@ export default function AdminSidebar() {
 
     return (
         <Sidebar collapsible="icon" className="sidebar-surface border-r overflow-hidden">
-        {/* Header: centra el logo cuando está colapsado */}
-            <SidebarHeader className="px-4 py-3">
+            <SidebarHeader className={collapsed ? "px-4 pt-3 pb-3" : "px-4 pt-6 pb-4"}>
                 <NavLink
                     to="/admin"
-                    className={`flex items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                        collapsed ? "justify-center" : ""
-                    }`}
+                    className={[
+                        "group flex items-center gap-3 rounded-md outline-none",
+                        "focus-visible:ring-2 focus-visible:ring-ring",
+                        collapsed ? "justify-center px-0" : "",
+                    ].join(" ")}
                 >
-                    <div className="grid size-8 aspect-square shrink-0 place-content-center rounded-lg bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400">
-                        <Heart className="size-4" />
+                    <div className="relative grid size-9 shrink-0 rounded-xl overflow-hidden border border-[color-mix(in_oklab,var(--brand-1),transparent_55%)] bg-[color-mix(in_oklab,var(--brand-veil),transparent_78%)] backdrop-blur-md">
+                        <img src={logoUrl} alt="HQ" className="w-full h-full object-contain" />
+                        <span
+                            aria-hidden
+                            className="absolute inset-0 rounded-xl pointer-events-none [background:conic-gradient(from_20deg_at_50%_50%,color-mix(in_oklab,var(--brand-1),transparent_85%),color-mix(in_oklab,var(--brand-2),transparent_88%),color-mix(in_oklab,var(--brand-3),transparent_85%),color-mix(in_oklab,#8ad2ff,transparent_90%),color-mix(in_oklab,#ffd38a,transparent_90%),color-mix(in_oklab,var(--brand-2),transparent_88%))] mix-blend-screen opacity-70 [padding:1px] [-webkit-mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] [mask-composite:exclude] [-webkit-mask-composite:xor]"
+                        />
                     </div>
                     {!collapsed && (
                         <div className="leading-tight">
-                            <p className="text-base font-semibold">ClinicCare</p>
-                            <p className="text-xs text-muted-foreground">Administración</p>
+                            <p className="text-[1.05rem] font-semibold tracking-tight">
+                                H<span className="text-sm relative -top-[1px]">&</span>Q Hospital
+                            </p>
+                            <p className="text-[0.8rem] text-muted-foreground">Administración</p>
                         </div>
                     )}
                 </NavLink>
             </SidebarHeader>
 
-            {/* Contenido */}
-            <SidebarContent className="px-2 overflow-hidden">
+            <SidebarContent className={collapsed ? "px-1 overflow-hidden" : "px-2 overflow-hidden"}>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Inicio</SidebarGroupLabel>
+                    <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Inicio</SidebarGroupLabel>
                     <SidebarGroupContent className="overflow-hidden">
-                        <SidebarMenu>
-                            {MENU.home.map((it) => (
-                                <NavItem key={it.to} {...it} />
-                            ))}
-                        </SidebarMenu>
+                        <SidebarMenu>{MENU.home.map((it) => <NavItem key={it.to} {...it} />)}</SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                <SidebarSeparator className="sidebar-divider" />
+                <SidebarSeparator className="sidebar-divider my-2" />
 
                 <SidebarGroup>
-                    <SidebarGroupLabel>Plataforma</SidebarGroupLabel>
+                    <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Plataforma</SidebarGroupLabel>
                     <SidebarGroupContent className="overflow-hidden">
-                        <SidebarMenu>
-                            {MENU.platform.map((it) => (
-                                <NavItem key={it.to} {...it} />
-                            ))}
-                        </SidebarMenu>
+                        <SidebarMenu>{MENU.platform.map((it) => <NavItem key={it.to} {...it} />)}</SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                <SidebarSeparator className="sidebar-divider" />
+                <SidebarSeparator className="sidebar-divider my-2" />
 
                 <SidebarGroup>
-                    <SidebarGroupLabel>Gestión clínica</SidebarGroupLabel>
+                    <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Gestión clínica</SidebarGroupLabel>
                     <SidebarGroupContent className="overflow-hidden">
-                        <SidebarMenu>
-                            {MENU.clinic.map((it) => (
-                                <NavItem key={it.to} {...it} />
-                            ))}
-                        </SidebarMenu>
+                        <SidebarMenu>{MENU.clinic.map((it) => <NavItem key={it.to} {...it} />)}</SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                <SidebarSeparator className="sidebar-divider" />
+                <SidebarSeparator className="sidebar-divider my-2" />
 
                 <SidebarGroup>
-                    <SidebarGroupLabel>Documentación</SidebarGroupLabel>
+                    <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Documentación</SidebarGroupLabel>
                     <SidebarGroupContent className="overflow-hidden">
-                        <SidebarMenu>
-                            {MENU.docs.map((it) => (
-                                <NavItem key={it.to} {...it} />
-                            ))}
-                        </SidebarMenu>
+                        <SidebarMenu>{MENU.docs.map((it) => <NavItem key={it.to} {...it} />)}</SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
 
-            {/* Footer: centra el avatar cuando está colapsado */}
-            <SidebarFooter className="border-t px-3 py-3">
+            <SidebarFooter className={collapsed ? "mt-auto border-t px-2 pt-2 pb-1" : "mt-auto border-t px-3 py-3"}>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
+                            tooltip={collapsed ? "Cuenta" : undefined}
                             className={collapsed ? "justify-center px-0" : "justify-start"}
                         >
-                            <button type="button" className="w-full cursor-default" tabIndex={-1}>
-                                <Avatar className="size-8 shrink-0">
-                                    <AvatarImage src="https://i.pravatar.cc/64?img=3" alt="@shadcn" />
-                                    <AvatarFallback>SC</AvatarFallback>
+                            <button
+                                type="button"
+                                className={collapsed ? "h-9 w-9 grid place-items-center rounded-md" : "w-full cursor-default"}
+                                tabIndex={-1}
+                                aria-label="Cuenta"
+                            >
+                                <Avatar className={collapsed ? "size-7 shrink-0" : "size-8 shrink-0"}>
+                                    <AvatarImage src="https://i.pravatar.cc/64?img=3" alt="@user" />
+                                    <AvatarFallback>U</AvatarFallback>
                                 </Avatar>
+
                                 {!collapsed && (
-                                    <div className="grid grow truncate text-left">
-                                        <span className="truncate text-sm font-medium">shadcn</span>
+                                    <div className="grid grow truncate text-left ml-2">
+                                        <span className="truncate text-sm font-medium">Usuario</span>
                                         <span className="truncate text-xs text-muted-foreground">m@example.com</span>
                                     </div>
                                 )}
@@ -188,6 +184,8 @@ export default function AdminSidebar() {
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarFooter>
+
+
         </Sidebar>
     );
 }
