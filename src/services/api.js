@@ -57,9 +57,20 @@ api.interceptors.response.use(
       },
     });
 
+    // ✅ Manejo específico para errores de validación (400)
+    if (error.response.status === 400 && error.response.data?.errors) {
+      return Promise.reject({
+        message: error.response.data?.detail || "Errores de validación",
+        status: error.response.status,
+        data: error.response.data, // ✅ Preservar toda la estructura
+        type: "validation",
+      });
+    }
+
     // Extraer mensaje de error del servidor
     let errorMessage =
       error.response.data?.message ||
+      error.response.data?.detail ||
       error.response.data?.error ||
       "Ha ocurrido un error inesperado";
 
@@ -71,7 +82,7 @@ api.interceptors.response.use(
     return Promise.reject({
       message: errorMessage,
       status: error.response.status,
-      data: error.response.data,
+      data: error.response.data, // ✅ Preservar los datos completos
     });
   }
 );
