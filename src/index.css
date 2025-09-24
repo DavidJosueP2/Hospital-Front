@@ -238,3 +238,168 @@ body{display:block!important;place-items:initial!important;min-height:100vh}
     color: color-mix(in oklab, var(--sidebar-foreground), transparent 35%);
     letter-spacing: .02em;
 }
+
+
+@layer utilities {
+    /* ===== Liquid Glass – panel tipo píldora sobre el gradiente existente ===== */
+    .liquid-pill{
+        /* capa por encima del fondo */
+        position:absolute; inset:0;
+        border-radius: theme(--radius-xl);
+        isolation:isolate;                          /* aísla blending interno */
+        /* vidrio translúcido real, sin matar el fondo */
+        background: color-mix(in oklab, var(--brand-veil), transparent 86%);
+        -webkit-backdrop-filter: blur(18px) saturate(145%) contrast(108%);
+        backdrop-filter: blur(18px) saturate(145%) contrast(108%);
+        border: 1px solid color-mix(in oklab, var(--brand-veil), transparent 62%);
+        box-shadow:
+                0 1px 0 0 color-mix(in oklab, white, transparent 82%) inset, /* bisel superior */
+                0 0 0 1px color-mix(in oklab, var(--brand-veil), transparent 78%), /* halo exterior */
+                0 18px 40px -18px color-mix(in oklab, var(--brand-3), transparent 70%); /* caída */
+    }
+
+    /* Brillos “gel” arriba/abajo (specular + viñeta interna) */
+    .liquid-pill::before{
+        content:""; position:absolute; inset:0; border-radius:inherit; z-index:0; pointer-events:none;
+        background:
+                radial-gradient(120% 70% at 50% -20%,
+                color-mix(in oklab, white, transparent 72%) 0%,
+                transparent 60%),
+                radial-gradient(140% 90% at 50% 120%,
+                color-mix(in oklab, var(--brand-veil), transparent 88%) 0%,
+                transparent 60%);
+        /* suaviza hacia el centro */
+        mask: radial-gradient(180% 130% at 50% 50%, black 50%, transparent 100%);
+    }
+
+    /* Anillo de iridiscencia sólo en los bordes (look “prisma”) */
+    .liquid-pill::after{
+        --edge: 14px;                                /* grosor del anillo iridiscente */
+        content:""; position:absolute; inset:0; border-radius:inherit; z-index:1; pointer-events:none;
+
+        /* Gradiente con tonos del brand (muy tenues) + un poco de arcoíris */
+        background:
+                conic-gradient(from 15deg at 50% 50%,
+                color-mix(in oklab, var(--brand-1), transparent 86%),
+                color-mix(in oklab, var(--brand-2), transparent 88%),
+                color-mix(in oklab, var(--brand-3), transparent 86%),
+                color-mix(in oklab, #ffd38a, transparent 90%),
+                color-mix(in oklab, #8ad2ff, transparent 90%),
+                color-mix(in oklab, var(--brand-2), transparent 88%));
+
+        /* Deja visible SOLO el borde: truco con doble máscara (stroke) */
+        padding: var(--edge);
+        -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+
+        mix-blend-mode: screen;         /* suma de luz sin “ensuciar” el fondo */
+        opacity: .75;
+        /* granulado sutil para “caustics” (ruido como máscara) */
+        background-blend-mode: screen;
+    }
+
+    /* Oscuro: vidrio un poco más denso */
+    .dark .liquid-pill{
+        background: color-mix(in oklab, var(--brand-veil), transparent 78%);
+        -webkit-backdrop-filter: blur(20px) saturate(150%) contrast(112%);
+        backdrop-filter: blur(20px) saturate(150%) contrast(112%);
+        border-color: color-mix(in oklab, var(--brand-veil), transparent 55%);
+        box-shadow:
+                0 1px 0 0 color-mix(in oklab, white, transparent 88%) inset,
+                0 0 0 1px color-mix(in oklab, var(--brand-veil), transparent 68%),
+                0 20px 44px -18px color-mix(in oklab, var(--brand-3), transparent 60%);
+    }
+
+    /* ===== (Opcional) Textura granular muy suave para el “frost” =====
+       Se aplica como capa extra si quieres más grano: añade <div class="liquid-grain" /> encima de .liquid-pill
+    =================================================================== */
+    .liquid-grain {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        z-index: 2;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' preserveAspectRatio='none'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='7'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='table' tableValues='0 0 .04 .08 .1 0'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+        mix-blend-mode: screen;
+        opacity: .45;
+    }
+}
+
+@layer utilities {
+    /* Tile cuadrado para el logo (borde + glass + halo sutil) */
+    .logo-tile{
+        position: relative;
+        display: grid;
+        place-content: center;
+        width: 36px; height: 36px; /* cuadrado */
+        border-radius: 10px;
+        background: color-mix(in oklab, var(--brand-veil), transparent 80%);
+        border: 1px solid color-mix(in oklab, var(--brand-1), transparent 55%);
+        -webkit-backdrop-filter: blur(10px) saturate(140%);
+        backdrop-filter: blur(10px) saturate(140%);
+        box-shadow:
+                0 1px 0 0 color-mix(in oklab, white, transparent 82%) inset,
+                0 6px 20px -8px color-mix(in oklab, var(--brand-3), transparent 75%);
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    /* el icono siempre centrado y sin “cuadrado del recurso” */
+    .logo-mark{
+        width: 18px; height: 18px; object-fit: contain; display: block;
+        filter: drop-shadow(0 1px 0 rgba(255,255,255,.35));
+    }
+
+    /* anillo/halo iridiscente muy tenue en los bordes */
+    .logo-ring{
+        position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+        background:
+                conic-gradient(from 20deg at 50% 50%,
+                color-mix(in oklab, var(--brand-1), transparent 85%),
+                color-mix(in oklab, var(--brand-2), transparent 88%),
+                color-mix(in oklab, var(--brand-3), transparent 85%),
+                color-mix(in oklab, #8ad2ff, transparent 90%),
+                color-mix(in oklab, #ffd38a, transparent 90%),
+                color-mix(in oklab, var(--brand-2), transparent 88%));
+        mix-blend-mode: screen;
+        opacity: .7;
+        /* mostrar SOLO borde: stroke falso con máscara */
+        padding: 1px; /* grosor del anillo */
+        -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+    }
+
+    /* Resalte del header cuando está expandido (que “respire” más) */
+    .sidebar-surface > [data-sidebar=header]{
+        position: relative;
+    }
+    .sidebar-surface > [data-sidebar=header]::after{
+        content:""; position:absolute; inset: -2px -2px 0 -2px; z-index:0; pointer-events:none;
+        border-bottom: 1px dashed color-mix(in oklab, var(--brand-1), transparent 70%);
+        background:
+                radial-gradient(600px 200px at 120% -40%,
+                color-mix(in oklab, var(--brand-1), transparent 92%) 0%, transparent 70%) no-repeat,
+                radial-gradient(520px 160px at -20% 140%,
+                color-mix(in oklab, var(--brand-3), transparent 94%) 0%, transparent 72%) no-repeat;
+    }
+
+    /* Hover del header (tile “brilla” un poco) */
+    .group:hover .logo-tile{
+        box-shadow:
+                0 1px 0 0 color-mix(in oklab, white, transparent 78%) inset,
+                0 8px 24px -10px color-mix(in oklab, var(--brand-2), transparent 60%);
+        border-color: color-mix(in oklab, var(--brand-2), transparent 45%);
+    }
+
+    /* Modo oscuro: un pelín más denso */
+    .dark .logo-tile{
+        background: color-mix(in oklab, var(--brand-veil), transparent 72%);
+        border-color: color-mix(in oklab, var(--brand-1), transparent 45%);
+    }
+}

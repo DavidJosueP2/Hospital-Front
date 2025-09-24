@@ -21,6 +21,7 @@ export function PageHeading({
                 className,
             ].join(" ")}
         >
+            <div className="liquid-pill" aria-hidden />
             <div className="pointer-events-none absolute inset-0 glass-edge" />
             <div className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full"
                  style={{ backgroundImage: "radial-gradient(closest-side, color-mix(in oklab, var(--brand-2), white 30%) 0%, transparent 70%)" }} />

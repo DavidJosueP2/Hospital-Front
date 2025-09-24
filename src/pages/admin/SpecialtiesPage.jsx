@@ -23,7 +23,8 @@ const columns = [
       </span>
         ),
     },
-    { accessorKey: "updatedAt", header: "Actualizado", size: 120, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString() },
+    { accessorKey: "createdAt", header: "Creado", size: 140, cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
+    { accessorKey: "updatedAt", header: "Actualizado", size: 140, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString() },
 ];
 
 export default function SpecialtiesPage() {
