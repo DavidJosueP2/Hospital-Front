@@ -69,11 +69,16 @@ export default function MedicalCentersPage() {
         setCreateOpen(true);
     };
 
-    const openEdit = (item) => {
-        setEditId(item.id);
-        setEditForm({ name: item.name, city: item.city, address: item.address });
-        setEditErrors({});
-        setEditOpen(true);
+    const openEdit = async (item) => {
+        try {
+            const { data } = await medicalCenters.getCenter(item.id, { includeDeleted });
+            setEditId(data.id);
+            setEditForm({ name: data.name, city: data.city, address: data.address });
+            setEditErrors({});
+            setEditOpen(true);
+        } catch (e) {
+            toast.error(e?.message || "No se pudo cargar el centro");
+        }
     };
 
     const openDelete = (item) => {
@@ -97,14 +102,18 @@ export default function MedicalCentersPage() {
     const submitEdit = async () => {
         setEditErrors({});
         try {
-            const etag = medicalCenters.getStoredEtag(editId);
-            const res = await updateMut.mutateAsync({ ...editForm, ...(etag ? { _etag: etag } : {}) });
-            toast.success("Centro actualizado", { description: res?.data?.name });
+            const { data } = await medicalCenters.updateCenter(editId, editForm);
+            toast.success("Centro actualizado", { description: data?.name });
             setEditOpen(false);
+            await refetch();
         } catch (e) {
+            if (e?.status === 409) {
+                toast.error("Este centro fue modificado por otro usuario. Actualiza la tabla e inténtalo nuevamente.");
+                return;
+            }
             const fieldErrs = medicalCenters.parseFieldErrors(e);
             if (Object.keys(fieldErrs).length) setEditErrors(fieldErrs);
-            toast.error(e?.message || "Error");
+            toast.error(e?.message || "Error al actualizar");
         }
     };
 
