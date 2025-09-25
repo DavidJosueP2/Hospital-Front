@@ -18,6 +18,23 @@ const employees = {
     });
     return res.data;
   },
+
+  async createEmployee(data) {
+    const payload = {
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      gender: data.gender,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      center_id: data.centerId,
+      roles: [{ name: "ADMIN" }],
+    };
+    console.log("Payload", payload);
+
+    const res = await api.post("/auth/register", payload);
+    return res.data;
+  },
 };
 
 export default employees;

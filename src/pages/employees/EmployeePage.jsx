@@ -6,6 +6,7 @@ import { Loader2, Trash2 } from "lucide-react";
 import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import employees from "@/services/employeeService";
+import CreateEmployeeDialog from "@/components/employees/CreateEmployeeDialog";
 
 const columns = (onDelete) => [
   {
@@ -73,6 +74,7 @@ const columns = (onDelete) => [
 ];
 
 export default function EmployeesPage() {
+  const [createOpen, setCreateOpen] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(10);
   const [includeDeleted, setIncludeDeleted] = React.useState(false);
@@ -138,20 +140,29 @@ export default function EmployeesPage() {
     <div className="space-y-6 p-6">
       <PageHeading
         title="Empleados"
-        subtitle="Visualiza empleados con paginación del servidor"
+        subtitle="Visualiza empleados o eliminalos."
         actions={
-          <Button
-            variant="outline"
-            onClick={() => {
-              setIncludeDeleted((v) => !v);
-              setPage(0);
-            }}
-          >
-            {includeDeleted
-              ? "Ocultar deshabilitados"
-              : "Mostrar deshabilitados"}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setCreateOpen(true)}>Nuevo empleado</Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIncludeDeleted((v) => !v);
+                setPage(0);
+              }}
+            >
+              {includeDeleted
+                ? "Ocultar deshabilitados"
+                : "Mostrar deshabilitados"}
+            </Button>
+          </div>
         }
+      />
+
+      <CreateEmployeeDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSuccess={load}
       />
 
       <div className="rounded-xl border bg-card">
