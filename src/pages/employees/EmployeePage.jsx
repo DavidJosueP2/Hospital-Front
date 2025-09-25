@@ -1,28 +1,18 @@
 import React from "react";
 import { toast } from "sonner";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/shadcn/card";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { Loader2 } from "lucide-react";
-import DataTable from "@/components/ui/table/data-table";
+import { Loader2, Trash2 } from "lucide-react";
+import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import employees from "@/services/employeeService";
 
-// columnas para la tabla
-const columns = [
+const columns = (onDelete) => [
   {
     accessorKey: "id",
     header: "ID",
-    size: 72,
     cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span>,
   },
-
   {
     id: "user",
     header: "Usuario",
@@ -41,108 +31,148 @@ const columns = [
       );
     },
   },
-
   {
     accessorKey: "email",
     header: "Correo",
     cell: ({ row }) => row.original.email || "—",
   },
   {
-    accessorKey: "centerId",
-    header: "Centro ID",
-    cell: ({ row }) => row.original.center_name ?? "—",
+    accessorKey: "center_name",
+    header: "Centro",
+    cell: ({ row }) => row.original.center_name || "—",
+  },
+  {
+    id: "actions",
+    header: "Acciones",
+    cell: ({ row }) => (
+      <Button
+        size="icon"
+        variant="ghost"
+        title="Eliminar"
+        onClick={() => onDelete(row.original)}
+      >
+        <Trash2 className="size-4 text-destructive" />
+      </Button>
+    ),
   },
 ];
 
 export default function EmployeesPage() {
-  const [pageIndex, setPageIndex] = React.useState(0);
+  const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(10);
-  const [sort, setSort] = React.useState("id,asc");
+  const [includeDeleted, setIncludeDeleted] = React.useState(false);
 
   const [rows, setRows] = React.useState([]);
-  const [total, setTotal] = React.useState(0);
-  const [pageCount, setPageCount] = React.useState(0);
+  const [totalPages, setTotalPages] = React.useState(0);
+  const [totalElements, setTotalElements] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
+  const [deletePending, setDeletePending] = React.useState(false);
 
   const load = React.useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const data = await employees.listEmployees({
-        page: pageIndex,
+        page,
         size: pageSize,
-        sort,
+        includeDeleted,
       });
-      setRows(data.content ?? []);
-      setTotal(data.totalElements ?? 0);
-      setPageCount(data.totalPages ?? 0);
+      setRows(data?.content ?? []);
+      setTotalPages(data?.totalPages ?? 0);
+      setTotalElements(data?.totalElements ?? 0);
     } catch (e) {
-      setError(e?.message || "Error");
-      toast.error(e?.message || "Error");
+      const msg = e?.response?.data?.detail || e?.message || "Error";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
-  }, [pageIndex, pageSize, sort]);
+  }, [page, pageSize, includeDeleted]);
 
   React.useEffect(() => {
     load();
   }, [load]);
 
+  const handlePaginationChange = ({ pageIndex, pageSize: newPageSize }) => {
+    if (pageIndex !== page || newPageSize !== pageSize) {
+      setPage(pageIndex);
+      setPageSize(newPageSize);
+    }
+  };
+
+  const handleDelete = async (employee) => {
+    if (!confirm(`¿Eliminar empleado ID ${employee.id}?`)) return;
+    setDeletePending(true);
+    try {
+      await employees.deleteEmployee(employee.id);
+      toast.success("Empleado eliminado", {
+        description: `ID ${employee.id}`,
+      });
+      await load();
+    } catch (e) {
+      const msg =
+        e?.response?.data?.detail || e?.message || "Error al eliminar";
+      toast.error(msg);
+    } finally {
+      setDeletePending(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <PageHeading
         title="Empleados"
-        subtitle="Visualiza y administra empleados"
+        subtitle="Visualiza empleados con paginación del servidor"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => {
+              setIncludeDeleted((v) => !v);
+              setPage(0);
+            }}
+          >
+            {includeDeleted
+              ? "Ocultar deshabilitados"
+              : "Mostrar deshabilitados"}
+          </Button>
+        }
       />
 
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-2">
-          <CardTitle>Empleados</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-xl border bg-card">
+        <div className="p-4">
           <DataTable
-            columns={columns}
+            columns={columns(handleDelete)}
             data={rows}
-            initialPageSize={pageSize}
-            searchable={false}
-            selectable={false}
+            manualPagination={true}
+            pageCount={Math.max(totalPages, 1)}
+            totalRows={totalElements}
+            state={{ pagination: { pageIndex: page, pageSize } }}
+            onPaginationChange={handlePaginationChange}
             emptyMessage={
               isLoading ? "Cargando..." : error ? error : "Sin datos"
             }
-            className="[&_th]:py-2 [&_td]:py-2"
-            serverPagination={{
-              pageIndex,
-              pageSize,
-              pageCount,
-              onPageChange: setPageIndex,
-              onPageSizeChange: (s) => {
-                setPageSize(s);
-                setPageIndex(0);
-              },
-            }}
-            serverSorting={{
-              sort,
-              onSortChange: (s) => {
-                setSort(s);
-                setPageIndex(0);
-              },
-            }}
+            searchable={false}
           />
-        </CardContent>
-        <CardFooter className="text-sm text-muted-foreground">
-          Total: {total}
-          <Separator className="mx-3 h-4" orientation="vertical" />
-          Página {pageIndex + 1} de {Math.max(pageCount, 1)}
-          <Separator className="mx-3 h-4" orientation="vertical" />
+        </div>
+
+        <div className="flex items-center justify-between px-4 py-2 text-sm text-muted-foreground">
+          <div>
+            Total: {totalElements}
+            <Separator
+              className="mx-3 h-4 inline-block align-middle"
+              orientation="vertical"
+            />
+            Página {page + 1} de {Math.max(totalPages, 1)}
+          </div>
           <Button variant="ghost" size="sm" onClick={load} disabled={isLoading}>
             {isLoading ? (
               <Loader2 className="mr-2 size-4 animate-spin" />
             ) : null}
             Refrescar
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
