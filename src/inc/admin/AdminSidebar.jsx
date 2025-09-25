@@ -107,6 +107,7 @@ export default function AdminSidebar() {
   };
 
   const handleLogout = async () => {
+    if (!window.confirm("¿Seguro que quieres cerrar sesión?")) return;
     await logout();
     navigate("/login");
   };
