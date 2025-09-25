@@ -1,11 +1,22 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/shadcn/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/shadcn/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/shadcn/dialog";
 import DataTable from "@/components/ui/table/data-table";
 import PatientForm from "@/components/patients/PatientForm";
 import { toast } from "sonner";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
-import { usePatientsPage, useCreatePatient, useUpdatePatient, useDeletePatient } from "@/hooks/usePatient";
+import {
+  usePatientsPage,
+  useCreatePatient,
+  useUpdatePatient,
+  useDeletePatient,
+} from "@/hooks/usePatient";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import PatientReadOnly from "@/components/patients/PatientReadOnly";
 
@@ -44,8 +55,8 @@ export default function PatientsPage() {
   const createMut = useCreatePatient();
   const updateMut = useUpdatePatient({ id: editForm.id });
   const deleteMut = useDeletePatient();
-const [confirmOpen, setConfirmOpen] = useState(false);
-const [patientToDelete, setPatientToDelete] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [patientToDelete, setPatientToDelete] = useState(null);
 
   const columns = [
     { accessorKey: "id", header: "ID" },
@@ -67,8 +78,10 @@ const [patientToDelete, setPatientToDelete] = useState(null);
       header: "Nacimiento",
       cell: ({ row }) =>
         row.original.birthDate
-    ? new Date(row.original.birthDate).toLocaleDateString("es-EC", { timeZone: "UTC" })
-    : ""
+          ? new Date(row.original.birthDate).toLocaleDateString("es-EC", {
+              timeZone: "UTC",
+            })
+          : "",
     },
     { accessorKey: "centerId", header: "Centro" },
   ];
@@ -77,26 +90,26 @@ const [patientToDelete, setPatientToDelete] = useState(null);
     const p = row.original;
     return (
       <div className="flex gap-1 justify-end">
-        <Button 
-          size="icon" 
-          variant="ghost" 
+        <Button
+          size="icon"
+          variant="ghost"
           onClick={() => {
             resetModalStates();
-            setSelectedPatient({...p});
+            setSelectedPatient({ ...p });
             setViewOpen(true);
-          }} 
+          }}
           title="Ver"
         >
           <Eye className="size-4" />
         </Button>
-        <Button 
-          size="icon" 
-          variant="ghost" 
+        <Button
+          size="icon"
+          variant="ghost"
           onClick={() => {
             resetModalStates();
-            setEditForm({...p});
+            setEditForm({ ...p });
             setFormOpen(true);
-          }} 
+          }}
           title="Editar"
         >
           <Pencil className="size-4" />
@@ -106,13 +119,13 @@ const [patientToDelete, setPatientToDelete] = useState(null);
           variant="ghost"
           onClick={() => {
             resetModalStates();
-            setPatientToDelete({...p});
+            setPatientToDelete({ ...p });
             setConfirmOpen(true);
           }}
           title="Eliminar"
->
-  <Trash2 className="size-4 text-destructive" />
-</Button>
+        >
+          <Trash2 className="size-4 text-destructive" />
+        </Button>
       </div>
     );
   };
@@ -120,7 +133,7 @@ const [patientToDelete, setPatientToDelete] = useState(null);
   const handleSave = async (data) => {
     try {
       setServerErrors({}); // Limpiar errores previos
-      
+
       if (editForm.id) {
         await updateMut.mutateAsync({ ...data, id: editForm.id });
         toast.success("Paciente actualizado");
@@ -128,23 +141,23 @@ const [patientToDelete, setPatientToDelete] = useState(null);
         await createMut.mutateAsync({ ...data, centerId });
         toast.success("Paciente creado");
       }
-      
+
       setFormOpen(false);
       setEditForm({});
       refetch();
     } catch (e) {
       console.log("Error capturado:", e); // Para debug
-      
+
       // ✅ Verificar si el error viene con la estructura correcta del interceptor
       if (e?.data?.errors) {
         setServerErrors(e.data.errors);
         toast.error("Por favor corrige los errores en el formulario");
-      } 
-     
+      }
+
       // ✅ Error genérico
       else {
         toast.error(e?.data?.detail || "Error inesperado");
-        setServerErrors({}); 
+        setServerErrors({});
       }
     }
   };
@@ -156,7 +169,12 @@ const [patientToDelete, setPatientToDelete] = useState(null);
         subtitle="Crea, asocia, edita y administra pacientes"
         actions={
           <div className="flex gap-2">
-            <Button onClick={() => { setEditForm({}); setFormOpen(true); }}>
+            <Button
+              onClick={() => {
+                setEditForm({});
+                setFormOpen(true);
+              }}
+            >
               <Plus className="mr-2 size-4" />
               Nuevo paciente
             </Button>
@@ -188,8 +206,8 @@ const [patientToDelete, setPatientToDelete] = useState(null);
       )}
 
       {/* Modal Crear/Editar */}
-      <Dialog 
-        open={formOpen} 
+      <Dialog
+        open={formOpen}
         onOpenChange={(open) => {
           if (!open) {
             resetModalStates();
@@ -199,9 +217,11 @@ const [patientToDelete, setPatientToDelete] = useState(null);
       >
         <DialogContent className="max-w-lg w-full">
           <DialogHeader>
-            <DialogTitle>{editForm.id ? "Editar paciente" : "Nuevo paciente"}</DialogTitle>
+            <DialogTitle>
+              {editForm.id ? "Editar paciente" : "Nuevo paciente"}
+            </DialogTitle>
           </DialogHeader>
-          <div key={editForm.id || 'new'}>
+          <div key={editForm.id || "new"}>
             <PatientForm
               defaultValues={editForm}
               onSubmit={handleSave}
@@ -211,8 +231,8 @@ const [patientToDelete, setPatientToDelete] = useState(null);
             />
           </div>
           <DialogFooter>
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={() => {
                 resetModalStates();
                 setFormOpen(false);
@@ -220,63 +240,66 @@ const [patientToDelete, setPatientToDelete] = useState(null);
             >
               Cancelar
             </Button>
-            <Button type="submit" form="patient-form">Guardar</Button>
+            <Button type="submit" form="patient-form">
+              Guardar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Modal Ver */}
-     <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-  <DialogContent className="max-w-lg w-full">
-    <DialogHeader>
-      <DialogTitle>Ver paciente</DialogTitle>
-    </DialogHeader>
-    <PatientReadOnly patient={selectedPatient} centers={centers} />
-    <DialogFooter>
-      <Button onClick={() => setViewOpen(false)}>Cerrar</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-
+      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+        <DialogContent className="max-w-lg w-full">
+          <DialogHeader>
+            <DialogTitle>Ver paciente</DialogTitle>
+          </DialogHeader>
+          <PatientReadOnly patient={selectedPatient} centers={centers} />
+          <DialogFooter>
+            <Button onClick={() => setViewOpen(false)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal Confirmar Eliminación */}
-<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-  <DialogContent className="max-w-md w-full">
-    <DialogHeader>
-      <DialogTitle>Confirmar eliminación</DialogTitle>
-    </DialogHeader>
-    <div className="py-4">
-      {patientToDelete && (
-        <p>
-          ¿Estás seguro de eliminar al paciente{" "}
-          <strong>{patientToDelete.firstName} {patientToDelete.lastName}</strong>?
-        </p>
-      )}
-    </div>
-    <DialogFooter>
-      <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
-        Cancelar
-      </Button>
-      <Button
-        variant="destructive"
-        onClick={async () => {
-          try {
-            await deleteMut.mutateAsync(patientToDelete.id);
-            toast.success("Paciente eliminado");
-            setConfirmOpen(false);
-            setPatientToDelete(null);
-            refetch();
-          } catch (e) {
-            toast.error(e?.message || "Error eliminando paciente");
-          }
-        }}
-      >
-        Eliminar
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md w-full">
+          <DialogHeader>
+            <DialogTitle>Confirmar eliminación</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {patientToDelete && (
+              <p>
+                ¿Estás seguro de eliminar al paciente{" "}
+                <strong>
+                  {patientToDelete.firstName} {patientToDelete.lastName}
+                </strong>
+                ?
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                try {
+                  await deleteMut.mutateAsync(patientToDelete.id);
+                  toast.success("Paciente eliminado");
+                  setConfirmOpen(false);
+                  setPatientToDelete(null);
+                  refetch();
+                } catch (e) {
+                  toast.error(e?.message || "Error eliminando paciente");
+                }
+              }}
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
