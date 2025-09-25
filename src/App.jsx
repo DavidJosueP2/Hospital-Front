@@ -42,7 +42,7 @@ export default function App() {
                 <Route path="/doctors" element={<DoctorsPage />} />
                  <Route path="/patients" element={<PatientsPage />} />
                 <Route path="/consultations" element={<MedicalConsultationsPage />} />
-   <Route path="/consultations/form" element={<MedicalConsultationFormPage />} />
+<Route path="/consultations/form" element={<MedicalConsultationFormPage />} />
             </Route>
 
           {/* Fallback público */}

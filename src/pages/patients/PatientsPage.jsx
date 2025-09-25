@@ -26,7 +26,6 @@ export default function PatientsPage() {
 
 const centerId = getUserCenterId();
 
-console.log(getUserCenterId());
 
   const { data, isLoading, isError, error, refetch } = usePatientsPage({ 
     centerId, 

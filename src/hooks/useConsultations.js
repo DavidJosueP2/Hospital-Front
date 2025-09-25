@@ -10,11 +10,12 @@ export const useMedicalConsultationsPage = (params) =>
   });
 
 // Consulta médica individual por ID
-export const useMedicalConsultation = (id) =>
+export const useMedicalConsultation = (id, options = {}) =>
   useQuery({
     queryKey: ["consultation", id],
     queryFn: () => consultations.getMedicalConsultation(id),
     enabled: !!id,
+    ...options,
   });
 
 // Crear consulta médica
