@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useAllCenters } from "@/hooks/useMedicalCenters";
+import { useAllCenters, useCenter } from "@/hooks/useMedicalCenters";
 import { Button } from "@/components/ui/shadcn/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/shadcn/dialog";
 import DataTable from "@/components/ui/table/data-table-pb";
@@ -34,8 +34,9 @@ console.log(getUserCenterId());
     size: pageSize 
   });
 
-const { data: centers = [] } = useAllCenters({ includeDeleted: false });
 
+const { data: centerData } = useCenter(centerId);
+const centers = centerData ? [centerData.data] : []; 
   const patientsList = data?.content ?? [];
   const totalPages = data?.totalPages ?? 1;
   const totalElements = data?.totalElements ?? 0;
@@ -69,7 +70,12 @@ const { data: centers = [] } = useAllCenters({ includeDeleted: false });
       cell: ({ row }) => 
         row.original.birthDate ? new Date(row.original.birthDate).toLocaleDateString("es-EC") : ""
     },
-    { accessorKey: "centerId", header: "Centro" },
+  {
+  accessorKey: "centerId",
+  header: "Centro",
+  cell: () => centerData?.data?.name ?? "—",
+},
+
   ];
 
   const rowActions = (row) => {
@@ -123,24 +129,26 @@ const { data: centers = [] } = useAllCenters({ includeDeleted: false });
     }
   };
 
-  const handleSave = async (data) => {
-    try {
-      setServerErrors({});
-      if (editForm.id) {
-        await updateMut.mutateAsync(data);
-        toast.success("Paciente actualizado");
-      } else {
-        await createMut.mutateAsync({ ...data, centerId });
-        toast.success("Paciente creado");
-      }
-      setFormOpen(false);
-      resetModalStates();
-      refetch();
-    } catch (e) {
-      setServerErrors(e?.data?.errors ?? {});
-      toast.error(e?.data?.detail || "Error");
+const handleSave = async (data) => {
+  try {
+    console.log(data);
+    setServerErrors({});
+    if (editForm.id) {
+      await updateMut.mutateAsync(data);
+      toast.success("Paciente actualizado");
+    } else {
+      await createMut.mutateAsync(data); 
+      toast.success("Paciente creado");
     }
-  };
+    setFormOpen(false);
+    resetModalStates();
+    refetch();
+  } catch (e) {
+    setServerErrors(e?.data?.errors ?? {});
+    toast.error(e?.data?.detail || "Error");
+  }
+};
+
 
   return (
     <div className="space-y-6 p-6">
