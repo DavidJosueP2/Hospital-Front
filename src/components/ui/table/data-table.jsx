@@ -194,7 +194,7 @@ export default function DataTable({
                             size="sm"
                             onClick={() => table.resetSorting()}
                         >
-                            Reset sort
+                           Restablecer orden
                         </Button>
                         <Button
                             variant="outline"

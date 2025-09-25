@@ -11,14 +11,17 @@ import { PageHeading } from "@/components/ui/typography/Heading";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import CenterForm from "@/components/medicalCenter/CenterForm";
 import medicalCenters from "@/services/medicalCenters.service";
+import PageMeta from "@/inc/seo/PageMeta.jsx";
 
 const columns = [
     { accessorKey: "id", header: "ID", size: 72, cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span> },
     { accessorKey: "name", header: "Nombre", cell: ({ row }) => <span className="font-medium">{row.original.name}</span> },
     { accessorKey: "city", header: "Ciudad", cell: ({ row }) => row.original.city },
     { accessorKey: "address", header: "Dirección", cell: ({ row }) => <span className="text-muted-foreground">{row.original.address}</span> },
-    { accessorKey: "updatedAt", header: "Actualizado", size: 120, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString() },
+    { accessorKey: "createdAt", header: "Creado", size: 140, cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
+    { accessorKey: "updatedAt", header: "Actualizado", size: 140, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString() },
 ];
+
 
 export default function MedicalCentersPage() {
     const [includeDeleted, setIncludeDeleted] = React.useState(false);
@@ -69,11 +72,16 @@ export default function MedicalCentersPage() {
         setCreateOpen(true);
     };
 
-    const openEdit = (item) => {
-        setEditId(item.id);
-        setEditForm({ name: item.name, city: item.city, address: item.address });
-        setEditErrors({});
-        setEditOpen(true);
+    const openEdit = async (item) => {
+        try {
+            const { data } = await medicalCenters.getCenter(item.id, { includeDeleted });
+            setEditId(data.id);
+            setEditForm({ name: data.name, city: data.city, address: data.address });
+            setEditErrors({});
+            setEditOpen(true);
+        } catch (e) {
+            toast.error(e?.message || "No se pudo cargar el centro");
+        }
     };
 
     const openDelete = (item) => {
@@ -97,14 +105,18 @@ export default function MedicalCentersPage() {
     const submitEdit = async () => {
         setEditErrors({});
         try {
-            const etag = medicalCenters.getStoredEtag(editId);
-            const res = await updateMut.mutateAsync({ ...editForm, ...(etag ? { _etag: etag } : {}) });
-            toast.success("Centro actualizado", { description: res?.data?.name });
+            const { data } = await medicalCenters.updateCenter(editId, editForm);
+            toast.success("Centro actualizado", { description: data?.name });
             setEditOpen(false);
+            await refetch();
         } catch (e) {
+            if (e?.status === 409) {
+                toast.error("Este centro fue modificado por otro usuario. Actualiza la tabla e inténtalo nuevamente.");
+                return;
+            }
             const fieldErrs = medicalCenters.parseFieldErrors(e);
             if (Object.keys(fieldErrs).length) setEditErrors(fieldErrs);
-            toast.error(e?.message || "Error");
+            toast.error(e?.message || "Error al actualizar");
         }
     };
 
@@ -120,6 +132,7 @@ export default function MedicalCentersPage() {
 
     return (
         <div className="space-y-6">
+            <PageMeta title="Centros Médicos" description="Gestión de centros médicos" />
             <PageHeading
                 title="Centros Médicos"
                 subtitle="Crear, actualizar y gestionar centros"
