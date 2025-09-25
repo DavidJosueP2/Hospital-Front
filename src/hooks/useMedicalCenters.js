@@ -13,6 +13,13 @@ export const useCentersPage = (params) =>
         queryKey: ["centers-all", params],
         queryFn: () => medicalCenters.listAllCenters(params),
     });
+    export const useCenter = (id, options = {}) => {
+  return useQuery({
+    queryKey: ["center", id, options],
+    queryFn: () => medicalCenters.getCenter(id, options),
+    enabled: !!id, 
+  });
+};
 
 export const useCreateCenter = () => {
     const qc = useQueryClient();

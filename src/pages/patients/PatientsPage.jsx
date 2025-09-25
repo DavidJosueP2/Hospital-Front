@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useAllCenters } from "@/hooks/useMedicalCenters";
+import { useAllCenters, useCenter } from "@/hooks/useMedicalCenters";
 import { Button } from "@/components/ui/shadcn/button";
 import {
   Dialog,
@@ -43,8 +43,8 @@ export default function PatientsPage() {
     size: pageSize,
   });
 
-  const { data: centers = [] } = useAllCenters({ includeDeleted: false });
-
+  const { data: centerData } = useCenter(centerId);
+  const centers = centerData ? [centerData.data] : [];
   const patientsList = data?.content ?? [];
   const totalPages = data?.totalPages ?? 1;
   const totalElements = data?.totalElements ?? 0;
@@ -83,7 +83,11 @@ export default function PatientsPage() {
           ? new Date(row.original.birthDate).toLocaleDateString("es-EC")
           : "",
     },
-    { accessorKey: "centerId", header: "Centro" },
+    {
+      accessorKey: "centerId",
+      header: "Centro",
+      cell: () => centerData?.data?.name ?? "—",
+    },
   ];
 
   const rowActions = (row) => {
@@ -139,12 +143,13 @@ export default function PatientsPage() {
 
   const handleSave = async (data) => {
     try {
+      console.log(data);
       setServerErrors({});
       if (editForm.id) {
         await updateMut.mutateAsync(data);
         toast.success("Paciente actualizado");
       } else {
-        await createMut.mutateAsync({ ...data, centerId });
+        await createMut.mutateAsync(data);
         toast.success("Paciente creado");
       }
       setFormOpen(false);

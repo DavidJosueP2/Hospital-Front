@@ -26,6 +26,11 @@ export default function PatientForm({ defaultValues, onSubmit, centers = [], rea
     mode: "onChange",
   });
 
+const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth() + 1).padStart(2, "0");
+const dd = String(today.getDate()).padStart(2, "0");
+const todayStr = `${yyyy}-${mm}-${dd}`;
 
   
   // Mapear errores del backend a react-hook-form
@@ -145,7 +150,7 @@ export default function PatientForm({ defaultValues, onSubmit, centers = [], rea
           <option value="">Seleccione género</option>
           <option value="FEMALE">Femenino</option>
           <option value="MALE">Masculino</option>
-          <option value="OTHER">Otro</option>
+      
         </select>
         {errors.gender && <p className="text-sm text-red-500">{errors.gender.message}</p>}
       </div>
@@ -153,27 +158,15 @@ export default function PatientForm({ defaultValues, onSubmit, centers = [], rea
       {/* Fecha de nacimiento */}
       <div>
         <Label className="mb-1 block">Fecha de nacimiento</Label>
-        <input
-          type="date"
-          {...register("birthDate", { 
-            required: "Seleccione la fecha de nacimiento",
-            validate: {
-              notFuture: (value) => {
-                const date = new Date(value);
-                const today = new Date();
-                return date <= today || "La fecha no puede ser futura";
-              },
-              notTooOld: (value) => {
-                const date = new Date(value);
-                const minDate = new Date();
-                minDate.setFullYear(minDate.getFullYear() - 120);
-                return date >= minDate || "La fecha no puede ser mayor a 120 años";
-              }
-            }
-          })}
-          disabled={readOnly}
-          className="h-12 px-3 py-2 border rounded-md w-full"
-        />
+    <input
+  type="date"
+  max={todayStr} // ahora solo permite hasta hoy
+  min={new Date(today.setFullYear(today.getFullYear() - 110)).toISOString().split("T")[0]}
+  {...register("birthDate", { required: "Seleccione la fecha de nacimiento" })}
+  disabled={readOnly}
+  className="h-12 px-3 py-2 border rounded-md w-full"
+/>
+
         {errors.birthDate && <p className="text-sm text-red-500">{errors.birthDate.message}</p>}
       </div>
 
