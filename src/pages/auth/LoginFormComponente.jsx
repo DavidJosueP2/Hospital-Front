@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/shadcn/input";
 import { Label } from "@/components/ui/shadcn/label";
 import { Button } from "@/components/ui/shadcn/button";
 import { Alert, AlertDescription } from "@/components/ui/shadcn/alert";
+import {toast} from "sonner";
 
 function LoginFormComponent() {
   const [identifier, setIdentifier] = useState(""); // DNI o Email
@@ -36,22 +37,26 @@ function LoginFormComponent() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!validateForm()) return;
 
-    try {
-      const result = await login(identifier, password);
+        try {
+            const result = await login(identifier, password);
 
-      if (result.success) {
-        navigate("/", { replace: true });
-      } else {
-        setErrors({ general: result.message });
-      }
-    } catch (error) {
-      setErrors({ general: "Error en el servidor. Intenta más tarde." });
-    }
-  };
+            if (result.success) {
+                toast.success("Inicio de sesión correcto", {
+                    id: "login-success",
+                    description: "Bienvenido de nuevo",
+                });
+                navigate("/", { replace: true });
+            } else {
+                setErrors({ general: result.message || "Credenciales inválidas" });
+            }
+        } catch {
+            setErrors({ general: "Error en el servidor. Intenta más tarde." });
+        }
+    };
 
   return (
     <div className="space-y-6">

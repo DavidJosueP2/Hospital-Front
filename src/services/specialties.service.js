@@ -51,7 +51,7 @@ export const deleteSpecialty = async (id) => {
 };
 
 export const parseFieldErrors = (error) => {
-    const errs = error?.response?.data?.errors; // ojo: axios error shape
+    const errs = error?.data?.errors; // ojo: axios error shape
     if (!errs || typeof errs !== "object") return {};
     return toCamel(errs);
 };

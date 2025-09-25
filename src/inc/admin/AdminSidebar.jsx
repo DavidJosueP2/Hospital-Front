@@ -38,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/shadcn/dropdown-menu";
+import Can from "@/utils/Can.jsx";
 
 function NavItem({ to, icon: Icon, label, className = "", end = false }) {
   const { state } = useSidebar();
@@ -57,7 +58,7 @@ function NavItem({ to, icon: Icon, label, className = "", end = false }) {
           end={end}
           aria-label={label}
           className={[
-            "group", // 👈 habilita group-aria para hijos
+            "group",
             collapsed
               ? "relative w-full grid place-items-center rounded-lg px-0 py-0.5"
               : "relative w-full flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted/60 text-foreground/90 aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:ring-1 aria-[current=page]:ring-brand/20 aria-[current=page]:before:absolute aria-[current=page]:before:left-[-6px] aria-[current=page]:before:top-1/2 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:h-5 aria-[current=page]:before:w-[3px] aria-[current=page]:before:rounded-full aria-[current=page]:before:bg-brand",
@@ -69,7 +70,6 @@ function NavItem({ to, icon: Icon, label, className = "", end = false }) {
                 ? "grid size-7 place-content-center shrink-0 rounded-md mx-0 my-0"
                 : "grid size-7 place-content-center shrink-0 rounded-md",
               "bg-transparent hover:bg-brand-1/25",
-              // 👇 activo en COLAPSADO: pinta sólo el tile del icono
               collapsed
                 ? "group-aria-[current=page]:bg-accent group-aria-[current=page]:text-accent-foreground"
                 : "aria-[current=page]:bg-brand-1/40",
@@ -86,28 +86,33 @@ function NavItem({ to, icon: Icon, label, className = "", end = false }) {
   );
 }
 
+const NAV_ADMIN_INICIO = [{ to: "/admin", icon: Heart, label: "Dashboard" }];
+
+const NAV_ADMIN_PLATAFORMA = [
+  { to: "/playground", icon: FolderKanban, label: "Playground" },
+];
+
+const NAV_ADMIN_GESTION = [
+  { to: "/employees", icon: UserCog, label: "Empleados" },
+  { to: "/doctors", icon: Stethoscope, label: "Doctores" },
+  { to: "/specialties", icon: ClipboardList, label: "Especialidades" },
+  { to: "/centers", icon: Building2, label: "Centros médicos" },
+];
+
+const NAV_DOCTOR_GESTION = [
+  { to: "/patients", icon: UserRound, label: "Pacientes" },
+  { to: "/consultations", icon: ClipboardList, label: "Consultas médicas" },
+];
+
+const NAV_DOCS = [{ to: "/docs", icon: BookText, label: "Guías & Manuales" }];
+
 export default function AdminSidebar() {
   const { state } = useSidebar();
   const { user, logout } = useContext(AuthContext);
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
 
-  const MENU = {
-    home: [{ to: "/admin", icon: Heart, label: "Dashboard" }],
-    platform: [{ to: "/playground", icon: FolderKanban, label: "Playground" }],
-    clinic: [
-      { to: "/employees", icon: UserCog, label: "Empleados" },
-      { to: "/doctors", icon: Stethoscope, label: "Doctores" },
-      { to: "/patients", icon: UserRound, label: "Pacientes" },
-      { to: "/specialties", icon: ClipboardList, label: "Especialidades" },
-      { to: "/centers", icon: Building2, label: "Centros médicos" },
-      { to: "/consultations", icon: ClipboardList, label: "Consultas médicas" },
-    ],
-    docs: [{ to: "/docs", icon: BookText, label: "Guías & Manuales" }],
-  };
-
   const handleLogout = async () => {
-    if (!window.confirm("¿Seguro que quieres cerrar sesión?")) return;
     await logout();
     navigate("/login");
   };
@@ -121,7 +126,7 @@ export default function AdminSidebar() {
         className={collapsed ? "px-4 pt-3 pb-3" : "px-4 pt-6 pb-4"}
       >
         <NavLink
-          to="/admin"
+          to="/"
           className={[
             "group flex items-center gap-3 rounded-md outline-none",
             "focus-visible:ring-2 focus-visible:ring-ring",
@@ -156,35 +161,37 @@ export default function AdminSidebar() {
       <SidebarContent
         className={collapsed ? "px-1 overflow-hidden" : "px-2 overflow-hidden"}
       >
-        <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-            Inicio
-          </SidebarGroupLabel>
-          <SidebarGroupContent className="overflow-hidden">
-            <SidebarMenu>
-              {MENU.home.map((it) => (
-                <NavItem key={it.to} {...it} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <Can allowedRoles={["ADMIN"]}>
+          <SidebarGroup>
+            <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
+              Inicio
+            </SidebarGroupLabel>
+            <SidebarGroupContent className="overflow-hidden">
+              <SidebarMenu>
+                {NAV_ADMIN_INICIO.map((item) => (
+                  <NavItem key={item.to} {...item} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarSeparator className="sidebar-divider my-2" />
+        </Can>
 
-        <SidebarSeparator className="sidebar-divider my-2" />
-
-        <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-            Plataforma
-          </SidebarGroupLabel>
-          <SidebarGroupContent className="overflow-hidden">
-            <SidebarMenu>
-              {MENU.platform.map((it) => (
-                <NavItem key={it.to} {...it} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator className="sidebar-divider my-2" />
+        <Can allowedRoles={["ADMIN"]}>
+          <SidebarGroup>
+            <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
+              Plataforma
+            </SidebarGroupLabel>
+            <SidebarGroupContent className="overflow-hidden">
+              <SidebarMenu>
+                {NAV_ADMIN_PLATAFORMA.map((item) => (
+                  <NavItem key={item.to} {...item} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarSeparator className="sidebar-divider my-2" />
+        </Can>
 
         <SidebarGroup>
           <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
@@ -192,9 +199,16 @@ export default function AdminSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent className="overflow-hidden">
             <SidebarMenu>
-              {MENU.clinic.map((it) => (
-                <NavItem key={it.to} {...it} />
-              ))}
+              <Can allowedRoles={["ADMIN"]}>
+                {NAV_ADMIN_GESTION.map((item) => (
+                  <NavItem key={item.to} {...item} />
+                ))}
+              </Can>
+              <Can allowedRoles={["DOCTOR"]}>
+                {NAV_DOCTOR_GESTION.map((item) => (
+                  <NavItem key={item.to} {...item} />
+                ))}
+              </Can>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -207,8 +221,8 @@ export default function AdminSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent className="overflow-hidden">
             <SidebarMenu>
-              {MENU.docs.map((it) => (
-                <NavItem key={it.to} {...it} />
+              {NAV_DOCS.map((item) => (
+                <NavItem key={item.to} {...item} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

@@ -26,7 +26,7 @@ export const deletePatient = async (id) => {
 };
 
 export const parseFieldErrors = (error) => {
-  const errs = error?.response?.data?.errors;
+  const errs = error?.data?.errors;
   return errs && typeof errs === "object" ? errs : {};
 };
 

@@ -2,7 +2,7 @@ import React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { Loader2, Trash2 } from "lucide-react";
+import {Loader2, Plus, Trash2, UserCog} from "lucide-react";
 import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import employees from "@/services/employeeService";
@@ -151,9 +151,13 @@ export default function EmployeesPage() {
       <PageHeading
         title="Empleados"
         subtitle="Visualiza empleados, crea o elimina."
+        icon={UserCog}
         actions={
           <div className="flex gap-2">
-            <Button onClick={() => setCreateOpen(true)}>Nuevo empleado</Button>
+            <Button onClick={() => setCreateOpen(true)}>
+                <Plus className="mr-2 size-4" />
+                Nuevo empleado
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
