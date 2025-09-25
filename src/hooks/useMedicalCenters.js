@@ -8,6 +8,12 @@ export const useCentersPage = (params) =>
         keepPreviousData: true,
     });
 
+    export const useAllCenters = (params) =>
+    useQuery({
+        queryKey: ["centers-all", params],
+        queryFn: () => medicalCenters.listAllCenters(params),
+    });
+
 export const useCreateCenter = () => {
     const qc = useQueryClient();
     return useMutation({
