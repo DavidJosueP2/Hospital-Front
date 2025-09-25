@@ -1,46 +1,105 @@
 import React from "react";
 import { toast } from "sonner";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/shadcn/card";
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardContent,
+    CardFooter,
+} from "@/components/ui/shadcn/card";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/shadcn/alert-dialog";
-import DataTable from "@/components/ui/table/data-table";
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from "@/components/ui/shadcn/alert-dialog";
+import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import doctors from "@/services/doctors.service";
 import CreateDoctorDialog from "@/components/doctor/CreateDoctorDialog";
 import EditDoctorDialog from "@/components/doctor/EditDoctorDialog";
 
-const columns = [
-    { accessorKey: "id", header: "ID", size: 72, cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span> },
-
+// Columnas con ordenamiento por columna habilitado (no desactivamos sorting)
+const baseColumns = (onEdit, onDelete) => [
+    {
+        accessorKey: "id",
+        header: "ID",
+        size: 72,
+        cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span>,
+    },
     {
         id: "user",
         header: "Usuario",
         cell: ({ row }) => {
             const d = row.original;
             const title = d.gender === "FEMALE" ? "Dra." : "Dr.";
-            const fullName = [d.firstName, d.lastName].filter(Boolean).join(" ") || d.username;
+            const fullName =
+                [d.firstName, d.lastName].filter(Boolean).join(" ") || d.username;
             return (
                 <div className="leading-snug">
-                    <div className="font-medium">{title} {fullName}</div>
+                    <div className="font-medium">
+                        {title} {fullName}
+                    </div>
                     <div className="text-xs text-muted-foreground">C.I. {d.username}</div>
                 </div>
             );
         },
     },
-
-    { accessorKey: "specialtyName", header: "Especialidad", cell: ({ row }) => row.original.specialtyName || "—" },
-    { accessorKey: "createdAt", header: "Creado", size: 140, cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
-    { accessorKey: "updatedAt", header: "Actualizado", size: 140, cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString() },
+    {
+        accessorKey: "specialtyName",
+        header: "Especialidad",
+        cell: ({ row }) => row.original.specialtyName || "—",
+    },
+    {
+        accessorKey: "createdAt",
+        header: "Creado",
+        size: 160,
+        cell: ({ row }) =>
+            row.original.createdAt ? new Date(row.original.createdAt).toLocaleString() : "—",
+    },
+    {
+        accessorKey: "updatedAt",
+        header: "Actualizado",
+        size: 160,
+        cell: ({ row }) =>
+            row.original.updatedAt ? new Date(row.original.updatedAt).toLocaleString() : "—",
+    },
+    {
+        id: "actions",
+        header: "Acciones",
+        size: 96,
+        cell: ({ row }) => {
+            const d = row.original;
+            return (
+                <div className="flex gap-1 justify-end">
+                    <Button size="icon" variant="ghost" title="Editar" onClick={() => onEdit(d)}>
+                        <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Eliminar"
+                        onClick={() => onDelete(d)}
+                    >
+                        <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                </div>
+            );
+        },
+    },
 ];
-
 
 export default function DoctorsPage() {
     const [includeDeleted, setIncludeDeleted] = React.useState(false);
     const [pageIndex, setPageIndex] = React.useState(0);
     const [pageSize, setPageSize] = React.useState(10);
-    const [sort, setSort] = React.useState("id,asc");
 
     const [rows, setRows] = React.useState([]);
     const [total, setTotal] = React.useState(0);
@@ -60,30 +119,43 @@ export default function DoctorsPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await doctors.listDoctors({ includeDeleted, page: pageIndex, size: pageSize, sort });
-            setRows(data.content ?? []);
-            setTotal(data.totalElements ?? 0);
-            setPageCount(data.totalPages ?? 0);
+            // Nota: quitamos "sort" del request; el orden es client-side por columna
+            const data = await doctors.listDoctors({
+                includeDeleted,
+                page: pageIndex,
+                size: pageSize,
+            });
+            setRows(data?.content ?? []);
+            setTotal(data?.totalElements ?? 0);
+            setPageCount(data?.totalPages ?? 0);
         } catch (e) {
-            setError(e?.message || "Error");
-            toast.error(e?.message || "Error");
+            const msg = e?.response?.data?.detail || e?.message || "Error";
+            setError(msg);
+            toast.error(msg);
         } finally {
             setIsLoading(false);
         }
-    }, [includeDeleted, pageIndex, pageSize, sort]);
+    }, [includeDeleted, pageIndex, pageSize]);
 
     React.useEffect(() => {
         load();
     }, [load]);
 
+    const onPaginationChange = ({ pageIndex: pi, pageSize: ps }) => {
+        if (pi !== pageIndex || ps !== pageSize) {
+            setPageIndex(pi);
+            setPageSize(ps);
+        }
+    };
+
     const openCreate = () => setCreateOpen(true);
 
-    const openEdit = (item) => {
+    const onEdit = (item) => {
         setEditId(item.id);
         setEditOpen(true);
     };
 
-    const openDelete = (item) => {
+    const onDelete = (item) => {
         setConfirmId(item.id);
         setConfirmOpen(true);
     };
@@ -94,26 +166,17 @@ export default function DoctorsPage() {
             await doctors.deleteDoctor(confirmId);
             setConfirmOpen(false);
             toast.success("Doctor eliminado", { description: `ID ${confirmId}` });
-            await load();
+            // Si se elimina la última fila de la página, retrocede una página
+            if (rows.length === 1 && pageIndex > 0) {
+                setPageIndex((p) => p - 1);
+            } else {
+                await load();
+            }
         } catch (e) {
             toast.error(e?.message || "Error");
         } finally {
             setDeletePending(false);
         }
-    };
-
-    const rowActions = (row) => {
-        const item = row.original;
-        return (
-            <>
-                <Button size="icon" variant="ghost" onClick={() => openEdit(item)} title="Editar">
-                    <Pencil className="size-4" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={() => openDelete(item)} title="Eliminar">
-                    <Trash2 className="size-4 text-destructive" />
-                </Button>
-            </>
-        );
     };
 
     return (
@@ -129,7 +192,10 @@ export default function DoctorsPage() {
                         </Button>
                         <Button
                             variant="outline"
-                            onClick={() => { setIncludeDeleted((v) => !v); setPageIndex(0); }}
+                            onClick={() => {
+                                setIncludeDeleted((v) => !v);
+                                setPageIndex(0);
+                            }}
                         >
                             {includeDeleted ? "Ocultar eliminados" : "Mostrar eliminados"}
                         </Button>
@@ -141,43 +207,22 @@ export default function DoctorsPage() {
                 <CardHeader className="pb-2">
                     <CardTitle>Doctores</CardTitle>
                 </CardHeader>
+
                 <CardContent>
                     <DataTable
-                        columns={[
-                            ...columns,
-                            {
-                                id: "_actions",
-                                header: "",
-                                size: 96,
-                                cell: ({ row }) => <div className="flex gap-1 justify-end">{rowActions(row)}</div>,
-                                enableSorting: false,
-                            },
-                        ]}
+                        columns={baseColumns(onEdit, onDelete)}
                         data={rows}
-                        initialPageSize={pageSize}
-                        searchable={false}
-                        selectable={false}
+                        manualPagination={true}
+                        pageCount={Math.max(pageCount, 1)}
+                        totalRows={total}
+                        state={{ pagination: { pageIndex, pageSize } }}
+                        onPaginationChange={onPaginationChange}
                         emptyMessage={isLoading ? "Cargando..." : error ? error : "Sin datos"}
+                        searchable={false} // sin filtros/buscador
                         className="[&_th]:py-2 [&_td]:py-2"
-                        serverPagination={{
-                            pageIndex,
-                            pageSize,
-                            pageCount,
-                            onPageChange: setPageIndex,
-                            onPageSizeChange: (s) => {
-                                setPageSize(s);
-                                setPageIndex(0);
-                            },
-                        }}
-                        serverSorting={{
-                            sort,
-                            onSortChange: (s) => {
-                                setSort(s);
-                                setPageIndex(0);
-                            },
-                        }}
                     />
                 </CardContent>
+
                 <CardFooter className="text-sm text-muted-foreground">
                     Total: {total}
                     <Separator className="mx-3 h-4" orientation="vertical" />
@@ -190,11 +235,7 @@ export default function DoctorsPage() {
                 </CardFooter>
             </Card>
 
-            <CreateDoctorDialog
-                open={createOpen}
-                onOpenChange={setCreateOpen}
-                onSuccess={load}
-            />
+            <CreateDoctorDialog open={createOpen} onOpenChange={setCreateOpen} onSuccess={load} />
 
             <EditDoctorDialog
                 open={editOpen}
@@ -208,7 +249,9 @@ export default function DoctorsPage() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>¿Eliminar doctor?</AlertDialogTitle>
-                        <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                        <AlertDialogDescription>
+                            Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={deletePending}>Cancelar</AlertDialogCancel>
