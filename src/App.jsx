@@ -12,6 +12,7 @@ import PasswordRecovery from "@/pages/auth/PasswordRecovery";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import MedicalCentersPage from "@/pages/admin/MedicalCentersPage.jsx";
 import PatientsPage from "./pages/patients/PatientsPage";
+import EmployeesPage from "@/pages/employees/EmployeePage";
 
 export default function App() {
   return (
@@ -26,16 +27,15 @@ export default function App() {
           </Route>
 
           {/* Rutas dentro del layout de administración */}
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute />}></Route>
 
+          <Route element={<AdminLayout />}>
+            <Route index element={<Navigate to="/playground" replace />} />
+            <Route path="/admin/employees" element={<EmployeesPage />} />
+            <Route path="/playground" element={<Playground />} />
+            <Route path="/admin/patients" element={<PatientsPage />} />
+            <Route path="/center" element={<MedicalCentersPage />} />
           </Route>
-
-            <Route element={<AdminLayout />}>
-                <Route index element={<Navigate to="/playground" replace />} />
-                <Route path="/playground" element={<Playground />} />
-                 <Route path="/admin/patients" element={<PatientsPage />} />
-                <Route path="/center" element={<MedicalCentersPage />} />
-            </Route>
 
           {/* Fallback público */}
           <Route path="*" element={<NotFound />} />
