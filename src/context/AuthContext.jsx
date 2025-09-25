@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
   // LOGOUT
   const logout = async () => {
     try {
-      await authService.logout(); // si tu servicio no llama al backend, igual funciona
+      await authService.logout();
     } catch (error) {
       console.error("Logout error:", error?.message || error);
     } finally {

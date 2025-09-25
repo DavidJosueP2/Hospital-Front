@@ -14,6 +14,7 @@ import MedicalCentersPage from "@/pages/admin/MedicalCentersPage.jsx";
 import SpecialtiesPage from "@/pages/admin/SpecialtiesPage.jsx";
 import DoctorsPage from "@/pages/admin/DoctorPage.jsx";
 import PatientsPage from "./pages/patients/PatientsPage";
+import EmployeesPage from "@/pages/employees/EmployeePage";
 
 export default function App() {
   return (
@@ -28,18 +29,17 @@ export default function App() {
           </Route>
 
           {/* Rutas dentro del layout de administración */}
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute />}></Route>
 
+          <Route element={<AdminLayout />}>
+            <Route index element={<Navigate to="/playground" replace />} />
+            <Route path="/employees" element={<EmployeesPage />} />
+            <Route path="/playground" element={<Playground />} />
+            <Route path="/centers" element={<MedicalCentersPage />} />
+            <Route path="/specialties" element={<SpecialtiesPage />} />
+            <Route path="/doctors" element={<DoctorsPage />} />
+            <Route path="/patients" element={<PatientsPage />} />
           </Route>
-
-            <Route element={<AdminLayout />}>
-                <Route index element={<Navigate to="/playground" replace />} />
-                <Route path="/playground" element={<Playground />} />
-                <Route path="/centers" element={<MedicalCentersPage />} />
-                <Route path="/specialties" element={<SpecialtiesPage />} />
-                <Route path="/doctors" element={<DoctorsPage />} />
-                 <Route path="/patients" element={<PatientsPage />} />
-            </Route>
 
           {/* Fallback público */}
           <Route path="*" element={<NotFound />} />

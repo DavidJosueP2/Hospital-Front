@@ -1,16 +1,26 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useAllCenters, useCenter } from "@/hooks/useMedicalCenters";
 import { Button } from "@/components/ui/shadcn/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/shadcn/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/shadcn/dialog";
 import DataTable from "@/components/ui/table/data-table-pb";
 import PatientForm from "@/components/patients/PatientForm";
 import PatientReadOnly from "@/components/patients/PatientReadOnly";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import { Plus, Pencil, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { usePatientsPage, useCreatePatient, useUpdatePatient, useDeletePatient } from "@/hooks/usePatient";
+import {
+  usePatientsPage,
+  useCreatePatient,
+  useUpdatePatient,
+  useDeletePatient,
+} from "@/hooks/usePatient";
 import { getUserCenterId } from "@/utils/auth";
-
 
 export default function PatientsPage() {
   const [formOpen, setFormOpen] = useState(false);
@@ -22,21 +32,19 @@ export default function PatientsPage() {
   const [pageSize, setPageSize] = useState(5);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
-  
 
-const centerId = getUserCenterId();
+  const centerId = getUserCenterId();
 
-console.log(getUserCenterId());
+  console.log(getUserCenterId());
 
-  const { data, isLoading, isError, error, refetch } = usePatientsPage({ 
-    centerId, 
-    page, 
-    size: pageSize 
+  const { data, isLoading, isError, error, refetch } = usePatientsPage({
+    centerId,
+    page,
+    size: pageSize,
   });
 
-
-const { data: centerData } = useCenter(centerId);
-const centers = centerData ? [centerData.data] : []; 
+  const { data: centerData } = useCenter(centerId);
+  const centers = centerData ? [centerData.data] : [];
   const patientsList = data?.content ?? [];
   const totalPages = data?.totalPages ?? 1;
   const totalElements = data?.totalElements ?? 0;
@@ -57,60 +65,64 @@ const centers = centerData ? [centerData.data] : [];
     { accessorKey: "dni", header: "DNI" },
     { accessorKey: "firstName", header: "Nombre" },
     { accessorKey: "lastName", header: "Apellido" },
-    { 
-      accessorKey: "gender", 
-      header: "Género", 
-      cell: ({ row }) => 
-        row.original.gender === "FEMALE" ? "Femenino" : 
-        row.original.gender === "MALE" ? "Masculino" : "Otro"
+    {
+      accessorKey: "gender",
+      header: "Género",
+      cell: ({ row }) =>
+        row.original.gender === "FEMALE"
+          ? "Femenino"
+          : row.original.gender === "MALE"
+          ? "Masculino"
+          : "Otro",
     },
-    { 
-      accessorKey: "birthDate", 
-      header: "Nacimiento", 
-      cell: ({ row }) => 
-        row.original.birthDate ? new Date(row.original.birthDate).toLocaleDateString("es-EC") : ""
+    {
+      accessorKey: "birthDate",
+      header: "Nacimiento",
+      cell: ({ row }) =>
+        row.original.birthDate
+          ? new Date(row.original.birthDate).toLocaleDateString("es-EC")
+          : "",
     },
-  {
-  accessorKey: "centerId",
-  header: "Centro",
-  cell: () => centerData?.data?.name ?? "—",
-},
-
+    {
+      accessorKey: "centerId",
+      header: "Centro",
+      cell: () => centerData?.data?.name ?? "—",
+    },
   ];
 
   const rowActions = (row) => {
     const p = row.original;
     return (
       <div className="flex gap-1 justify-end">
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => { 
-            setSelectedPatient(p); 
-            setViewOpen(true); 
-          }} 
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => {
+            setSelectedPatient(p);
+            setViewOpen(true);
+          }}
           title="Ver"
         >
           <Eye className="size-4" />
         </Button>
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => { 
-            setEditForm(p); 
-            setFormOpen(true); 
-          }} 
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => {
+            setEditForm(p);
+            setFormOpen(true);
+          }}
           title="Editar"
         >
           <Pencil className="size-4" />
         </Button>
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => { 
-            setPatientToDelete(p); 
-            setConfirmOpen(true); 
-          }} 
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => {
+            setPatientToDelete(p);
+            setConfirmOpen(true);
+          }}
           title="Eliminar"
         >
           <Trash2 className="size-4 text-destructive" />
@@ -129,26 +141,25 @@ const centers = centerData ? [centerData.data] : [];
     }
   };
 
-const handleSave = async (data) => {
-  try {
-    console.log(data);
-    setServerErrors({});
-    if (editForm.id) {
-      await updateMut.mutateAsync(data);
-      toast.success("Paciente actualizado");
-    } else {
-      await createMut.mutateAsync(data); 
-      toast.success("Paciente creado");
+  const handleSave = async (data) => {
+    try {
+      console.log(data);
+      setServerErrors({});
+      if (editForm.id) {
+        await updateMut.mutateAsync(data);
+        toast.success("Paciente actualizado");
+      } else {
+        await createMut.mutateAsync(data);
+        toast.success("Paciente creado");
+      }
+      setFormOpen(false);
+      resetModalStates();
+      refetch();
+    } catch (e) {
+      setServerErrors(e?.data?.errors ?? {});
+      toast.error(e?.data?.detail || "Error");
     }
-    setFormOpen(false);
-    resetModalStates();
-    refetch();
-  } catch (e) {
-    setServerErrors(e?.data?.errors ?? {});
-    toast.error(e?.data?.detail || "Error");
-  }
-};
-
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -156,10 +167,12 @@ const handleSave = async (data) => {
         title="Pacientes"
         subtitle="Crea, edita y administra pacientes"
         actions={
-          <Button onClick={() => { 
-            resetModalStates(); 
-            setFormOpen(true); 
-          }}>
+          <Button
+            onClick={() => {
+              resetModalStates();
+              setFormOpen(true);
+            }}
+          >
             <Plus className="mr-2 size-4" />
             Nuevo paciente
           </Button>
@@ -191,21 +204,24 @@ const handleSave = async (data) => {
       )}
 
       {/* Modal Crear/Editar */}
-      <Dialog open={formOpen} onOpenChange={(o) => { 
-        if (!o) resetModalStates(); 
-        setFormOpen(o); 
-      }}>
+      <Dialog
+        open={formOpen}
+        onOpenChange={(o) => {
+          if (!o) resetModalStates();
+          setFormOpen(o);
+        }}
+      >
         <DialogContent className="max-w-lg w-full">
           <DialogHeader>
             <DialogTitle>
               {editForm.id ? "Editar paciente" : "Nuevo paciente"}
             </DialogTitle>
           </DialogHeader>
-          <PatientForm 
-            defaultValues={editForm} 
-            onSubmit={handleSave} 
-            centers={centers} 
-            serverErrors={serverErrors} 
+          <PatientForm
+            defaultValues={editForm}
+            onSubmit={handleSave}
+            centers={centers}
+            serverErrors={serverErrors}
             formId="patient-form"
           />
           <DialogFooter>
@@ -240,15 +256,16 @@ const handleSave = async (data) => {
           </DialogHeader>
           {patientToDelete && (
             <p className="py-4">
-              ¿Eliminar a {patientToDelete.firstName} {patientToDelete.lastName}?
+              ¿Eliminar a {patientToDelete.firstName} {patientToDelete.lastName}
+              ?
             </p>
           )}
           <DialogFooter>
             <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
               Cancelar
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={async () => {
                 await deleteMut.mutateAsync(patientToDelete.id);
                 toast.success("Paciente eliminado");
