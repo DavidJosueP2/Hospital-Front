@@ -60,16 +60,26 @@ const columns = (onDelete) => [
   {
     id: "actions",
     header: "Acciones",
-    cell: ({ row }) => (
-      <Button
-        size="icon"
-        variant="ghost"
-        title="Eliminar"
-        onClick={() => onDelete(row.original)}
-      >
-        <Trash2 className="size-4 text-destructive" />
-      </Button>
-    ),
+    cell: ({ row }) => {
+      const d = row.original;
+      const disabled = !d.enabled;
+
+      return (
+        <Button
+          size="icon"
+          variant="ghost"
+          title={disabled ? "Empleado inactivo" : "Deshabilitar"}
+          onClick={() => !disabled && onDelete(d)}
+          disabled={disabled}
+        >
+          <Trash2
+            className={`size-4 ${
+              disabled ? "text-muted-foreground" : "text-destructive"
+            }`}
+          />
+        </Button>
+      );
+    },
   },
 ];
 

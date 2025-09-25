@@ -182,11 +182,31 @@ export default function CreateEmployeeDialog({
       onOpenChange(false);
       onSuccess?.();
     } catch (e) {
-      const errors = e?.response?.data?.errors || {};
-      Object.entries(errors).forEach(([field, message]) => {
-        setServerErrs(field, { type: "server", message });
-      });
-      toast.error("Error al crear empleado");
+      const errorData = e?.data;
+
+      if (errorData?.errors) {
+        let hasFieldError = false;
+
+        Object.entries(errorData.errors).forEach(([field, message]) => {
+          if (field === "global") {
+            // error general → toast
+            toast.error(message);
+          } else {
+            // error ligado a un campo → mostrar debajo del input
+            hasFieldError = true;
+            setServerErrs((prev) => ({ ...prev, [field]: message }));
+          }
+        });
+
+        // si no hubo error de campo, al menos mostramos el detail
+        if (!hasFieldError && errorData?.detail) {
+          toast.error(errorData.detail);
+        }
+      } else if (errorData?.detail) {
+        toast.error(errorData.detail);
+      } else {
+        toast.error("Error al crear empleado");
+      }
     } finally {
       setPending(false);
     }
