@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useAllCenters, useCenter } from "@/hooks/useMedicalCenters";
+import { useCenter } from "@/hooks/useMedicalCenters";
 import { Button } from "@/components/ui/shadcn/button";
 import {
   Dialog,
@@ -35,7 +35,6 @@ export default function PatientsPage() {
 
   const centerId = getUserCenterId();
 
-  console.log(getUserCenterId());
 
   const { data, isLoading, isError, error, refetch } = usePatientsPage({
     centerId,
