@@ -42,6 +42,21 @@ const columns = (onDelete) => [
     cell: ({ row }) => row.original.center_name || "—",
   },
   {
+    accessorKey: "enabled",
+    header: "Estado",
+    cell: ({ row }) => (
+      <span
+        className={
+          row.original.enabled
+            ? "text-green-600 font-medium"
+            : "text-red-600 font-medium"
+        }
+      >
+        {row.original.enabled ? "Activo" : "Inactivo"}
+      </span>
+    ),
+  },
+  {
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => (
