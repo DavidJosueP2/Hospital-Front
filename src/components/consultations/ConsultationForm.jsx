@@ -55,6 +55,10 @@ export default function ConsultationForm({
 
   const [selectedPatient, setSelectedPatient] = React.useState(null);
 
+  // ✅ Calcular fecha y hora actuales en formato yyyy-MM-ddTHH:mm
+  const now = new Date();
+  const nowStr = now.toISOString().slice(0, 16);
+
   useEffect(() => {
     clearErrors();
     if (serverErrors && typeof serverErrors === "object") {
@@ -173,7 +177,11 @@ export default function ConsultationForm({
               <input type="hidden" {...register("patientId")} />
             </>
           )}
-          <input type="hidden" {...register("patientId", { required: true })} />
+          {/* ✅ patientId requerido */}
+          <input
+            type="hidden"
+            {...register("patientId", { required: "Seleccione un paciente" })}
+          />
           {errors.patientId && (
             <p className="text-sm text-red-500">{errors.patientId.message}</p>
           )}
@@ -186,6 +194,7 @@ export default function ConsultationForm({
             type="datetime-local"
             {...register("date", { required: "Seleccione fecha y hora" })}
             disabled={readOnly}
+            max={nowStr} // ✅ no permite fechas futuras
           />
           {errors.date && (
             <p className="text-sm text-red-500">{errors.date.message}</p>
@@ -205,22 +214,16 @@ export default function ConsultationForm({
         )}
       </div>
 
-      {/* Tratamiento */}
+      {/* Tratamiento (opcional) */}
       <div>
         <Label className="mb-3">Tratamiento</Label>
         <Textarea {...register("treatment")} disabled={readOnly} />
-        {errors.treatment && (
-          <p className="text-sm text-red-500">{errors.treatment.message}</p>
-        )}
       </div>
 
-      {/* Notas */}
+      {/* Notas (opcional) */}
       <div>
         <Label className="mb-3">Notas</Label>
         <Textarea {...register("notes")} disabled={readOnly} />
-        {errors.notes && (
-          <p className="text-sm text-red-500">{errors.notes.message}</p>
-        )}
       </div>
     </form>
   );
