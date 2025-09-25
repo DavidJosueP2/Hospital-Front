@@ -150,7 +150,7 @@ export default function EmployeesPage() {
     <div className="space-y-6 p-6">
       <PageHeading
         title="Empleados"
-        subtitle="Visualiza empleados o eliminalos."
+        subtitle="Visualiza empleados, crea o elimina."
         actions={
           <div className="flex gap-2">
             <Button onClick={() => setCreateOpen(true)}>Nuevo empleado</Button>
