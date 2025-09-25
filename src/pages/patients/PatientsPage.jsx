@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { useAllCenters } from "@/hooks/useMedicalCenters";
 import { Button } from "@/components/ui/shadcn/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/shadcn/dialog";
 import DataTable from "@/components/ui/table/data-table-pb";
@@ -8,11 +9,8 @@ import { PageHeading } from "@/components/ui/typography/Heading";
 import { Plus, Pencil, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { usePatientsPage, useCreatePatient, useUpdatePatient, useDeletePatient } from "@/hooks/usePatient";
+import { getUserCenterId } from "@/utils/auth";
 
-const centers = [
-  { id: 1, name: "Centro Médico 1" },
-  { id: 2, name: "Centro Médico 2" },
-];
 
 export default function PatientsPage() {
   const [formOpen, setFormOpen] = useState(false);
@@ -24,15 +22,20 @@ export default function PatientsPage() {
   const [pageSize, setPageSize] = useState(5);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
+  
 
-  const centerId = 1;
+const centerId = getUserCenterId();
+
+console.log(getUserCenterId());
 
   const { data, isLoading, isError, error, refetch } = usePatientsPage({ 
     centerId, 
     page, 
     size: pageSize 
   });
-  
+
+const { data: centers = [] } = useAllCenters({ includeDeleted: false });
+
   const patientsList = data?.content ?? [];
   const totalPages = data?.totalPages ?? 1;
   const totalElements = data?.totalElements ?? 0;
