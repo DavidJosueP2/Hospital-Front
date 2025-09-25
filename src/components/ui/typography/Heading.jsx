@@ -6,12 +6,14 @@ export function PageHeading({
                                 title,
                                 subtitle,
                                 kicker,
-                                icon: Icon,                 // icono grande opcional a la izquierda del bloque
-                                titleIcon: TitleIcon = Stars, // icono en burbuja a la izquierda del TÍTULO
+                                icon: Icon,
+                                titleIcon: TitleIcon = Stars,
                                 actions,
                                 className = "",
                                 children,
                             }) {
+    const LeadingIcon = Icon ?? TitleIcon;
+
     return (
         <div
             className={[
@@ -23,21 +25,31 @@ export function PageHeading({
         >
             <div className="liquid-pill" aria-hidden />
             <div className="pointer-events-none absolute inset-0 glass-edge" />
-            <div className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full"
-                 style={{ backgroundImage: "radial-gradient(closest-side, color-mix(in oklab, var(--brand-2), white 30%) 0%, transparent 70%)" }} />
-            <div className="pointer-events-none absolute -bottom-28 -right-28 h-96 w-96 rounded-full"
-                 style={{ backgroundImage: "radial-gradient(closest-side, color-mix(in oklab, var(--brand-3), white 30%) 0%, transparent 70%)" }} />
+            <div
+                className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full"
+                style={{
+                    backgroundImage:
+                        "radial-gradient(closest-side, color-mix(in oklab, var(--brand-2), white 30%) 0%, transparent 70%)",
+                }}
+            />
+            <div
+                className="pointer-events-none absolute -bottom-28 -right-28 h-96 w-96 rounded-full"
+                style={{
+                    backgroundImage:
+                        "radial-gradient(closest-side, color-mix(in oklab, var(--brand-3), white 30%) 0%, transparent 70%)",
+                }}
+            />
 
             <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div className="flex min-w-0 items-start gap-3">
-                    {Icon ? (
+                    {LeadingIcon ? (
                         <div
                             className={[
-                                "grid size-12 place-content-center shrink-0 rounded-xl shadow-sm",
+                                "grid size-14 md:size-16 place-content-center shrink-0 rounded-2xl shadow-sm",
                                 "ring-1 ring-black/5 bg-white/60 text-foreground dark:bg-white/10 dark:ring-white/10",
                             ].join(" ")}
                         >
-                            <Icon className="size-5" />
+                            <LeadingIcon className="size-6 md:size-7" />
                         </div>
                     ) : null}
 
@@ -49,19 +61,15 @@ export function PageHeading({
                         ) : null}
 
                         <div className="flex items-center gap-3">
-                            {TitleIcon ? (
-                                <span className="title-bubble size-9">
-                  <TitleIcon className="size-5" />
-                </span>
-                            ) : null}
-
                             <h1 className="text-3xl font-extrabold tracking-tight leading-tight md:text-4xl text-foreground">
                                 {title}
                             </h1>
                         </div>
 
                         {subtitle ? (
-                            <p className="mt-2 max-w-prose text-sm md:text-base text-foreground/75">{subtitle}</p>
+                            <p className="mt-2 max-w-prose text-sm md:text-base text-foreground/75">
+                                {subtitle}
+                            </p>
                         ) : null}
                     </div>
                 </div>
@@ -90,13 +98,9 @@ export function SectionHeading({ title, subtitle, icon: Icon, className = "", ac
                     ) : (
                         <span className="h-2.5 w-2.5 rounded-full bg-brand shadow-[0_0_0_4px] shadow-[color-mix(in_oklab,var(--brand),transparent_80%)]" />
                     )}
-                    <h2 className="text-lg font-semibold leading-none tracking-tight text-foreground/95">
-                        {title}
-                    </h2>
+                    <h2 className="text-lg font-semibold leading-none tracking-tight text-foreground/95">{title}</h2>
                 </div>
-                {subtitle ? (
-                    <p className="ml-9 mt-1 max-w-prose text-sm text-muted-foreground">{subtitle}</p>
-                ) : null}
+                {subtitle ? <p className="ml-9 mt-1 max-w-prose text-sm text-muted-foreground">{subtitle}</p> : null}
             </div>
 
             {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
@@ -111,9 +115,7 @@ export function SubSectionHeading({ title, subtitle, className = "" }) {
                 <span className="h-1.5 w-6 rounded-full bg-brand" />
                 <h3 className="text-base font-semibold leading-none tracking-tight">{title}</h3>
             </div>
-            {subtitle ? (
-                <p className="ml-8 mt-1 text-xs text-muted-foreground">{subtitle}</p>
-            ) : null}
+            {subtitle ? <p className="ml-8 mt-1 text-xs text-muted-foreground">{subtitle}</p> : null}
         </div>
     );
 }

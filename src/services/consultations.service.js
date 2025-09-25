@@ -32,7 +32,7 @@ export const deleteMedicalConsultation = async (id) => {
 
 // Parsear errores de validación del backend
 export const parseFieldErrors = (error) => {
-  const errs = error?.response?.data?.errors;
+  const errs = error?.data?.errors;
   return errs && typeof errs === "object" ? errs : {};
 };
 
