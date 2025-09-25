@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useAllCenters, useCenter } from "@/hooks/useMedicalCenters";
+import { useCenter } from "@/hooks/useMedicalCenters";
 import { Button } from "@/components/ui/shadcn/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/shadcn/dialog";
 import DataTable from "@/components/ui/table/data-table-pb";

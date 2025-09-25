@@ -14,6 +14,8 @@ import MedicalCentersPage from "@/pages/admin/MedicalCentersPage.jsx";
 import SpecialtiesPage from "@/pages/admin/SpecialtiesPage.jsx";
 import DoctorsPage from "@/pages/admin/DoctorPage.jsx";
 import PatientsPage from "./pages/patients/PatientsPage";
+import MedicalConsultationFormPage from "./pages/consultations/MedicalConsultationFormPage";
+import MedicalConsultationsPage from "./pages/consultations/MedicalConsultationsPage";
 
 export default function App() {
   return (
@@ -39,6 +41,8 @@ export default function App() {
                 <Route path="/specialties" element={<SpecialtiesPage />} />
                 <Route path="/doctors" element={<DoctorsPage />} />
                  <Route path="/patients" element={<PatientsPage />} />
+                <Route path="/consultations" element={<MedicalConsultationsPage />} />
+   <Route path="/consultations/form" element={<MedicalConsultationFormPage />} />
             </Route>
 
           {/* Fallback público */}
