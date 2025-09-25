@@ -80,7 +80,7 @@ export const deleteDoctor = async (id) => {
 };
 
 export const parseFieldErrors = (error) => {
-    const errs = error?.response?.data?.errors;
+    const errs = error?.data?.errors;
     if (!errs || typeof errs !== "object") return {};
     return toCamel(errs);
 };

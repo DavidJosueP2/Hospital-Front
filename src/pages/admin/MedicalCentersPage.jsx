@@ -2,7 +2,7 @@ import React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Building2 } from "lucide-react";
 import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import PageMeta from "@/inc/seo/PageMeta.jsx";
@@ -25,9 +25,9 @@ import {
     AlertDialogCancel,
     AlertDialogAction,
 } from "@/components/ui/shadcn/alert-dialog";
+
 import CenterForm from "@/components/medicalCenter/CenterForm";
 
-// Columnas con sort por columna habilitado (no ponemos enableSorting:false)
 const columns = (onEdit, onDelete) => [
     {
         accessorKey: "id",
@@ -53,11 +53,16 @@ const columns = (onEdit, onDelete) => [
         ),
     },
     {
-        accessorKey: "createdAt",
-        header: "Creado",
-        size: 160,
-        cell: ({ row }) =>
-            row.original.createdAt ? new Date(row.original.createdAt).toLocaleString() : "—",
+        id: "status",
+        header: "Estado",
+        cell: ({ row }) => {
+            const isDeleted = !!row.original.deleted;
+            return (
+                <span className={isDeleted ? "text-red-600 font-medium" : "text-green-600 font-medium"}>
+          {isDeleted ? "Inactivo" : "Activo"}
+        </span>
+            );
+        },
     },
     {
         accessorKey: "updatedAt",
@@ -68,22 +73,35 @@ const columns = (onEdit, onDelete) => [
     },
     {
         id: "actions",
-        header: "Acciones",
+        header: "Acciones", // alineado a la izquierda
         size: 96,
         cell: ({ row }) => {
             const d = row.original;
+            const disabled = !!d.deleted;
+
             return (
-                <div className="flex justify-end gap-1">
-                    <Button size="icon" variant="ghost" title="Editar" onClick={() => onEdit(d)}>
-                        <Pencil className="size-4" />
+                <div className="flex gap-1">
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        title={disabled ? "Centro inactivo" : "Editar"}
+                        onClick={() => !disabled && onEdit(d)}
+                        disabled={disabled}
+                    >
+                        <Pencil className={`size-4 ${disabled ? "text-muted-foreground" : ""}`} />
                     </Button>
                     <Button
                         size="icon"
                         variant="ghost"
-                        title="Eliminar"
-                        onClick={() => onDelete(d)}
+                        title={disabled ? "Centro inactivo" : "Eliminar"}
+                        onClick={() => !disabled && onDelete(d)}
+                        disabled={disabled}
                     >
-                        <Trash2 className="size-4 text-destructive" />
+                        <Trash2
+                            className={`size-4 ${
+                                disabled ? "text-muted-foreground" : "text-destructive"
+                            }`}
+                        />
                     </Button>
                 </div>
             );
@@ -240,6 +258,7 @@ export default function MedicalCentersPage() {
             <PageHeading
                 title="Centros Médicos"
                 subtitle="Visualiza, crea, edita o elimina centros."
+                icon={Building2}
                 actions={
                     <div className="flex gap-2">
                         <Button onClick={openCreate}>

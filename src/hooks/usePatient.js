@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import patients from "@/services/patients.service";
+import patients, { listAllPatients } from "@/services/patients.service";
 
 export const usePatientsPage = (params) =>
   useQuery({
@@ -41,3 +41,11 @@ export const useDeletePatient = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["patients"] }),
   });
 };
+
+export const useAllPatients = (centerId, options = {}) =>
+  useQuery({
+    queryKey: ["patients", "all", centerId],
+    queryFn: () => listAllPatients(centerId),
+    enabled: !!centerId, 
+    ...options,
+  });

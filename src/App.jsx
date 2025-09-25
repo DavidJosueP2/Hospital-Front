@@ -3,7 +3,6 @@ import AdminLayout from "@/layouts/AdminLayout";
 import Playground from "@/pages/admin/Playground";
 import AppToaster from "@/inc/ui/Toaster.jsx";
 import NotFound from "@/pages/NotFound.jsx";
-import AuthLayout from "@/layouts/AuthLayout.jsx";
 import Login from "@/pages/auth/Login";
 import ErrorBoundary from "@/utils/ErrorBoundary";
 import { AuthProvider } from "@/context/AuthContext";
@@ -15,8 +14,11 @@ import SpecialtiesPage from "@/pages/admin/SpecialtiesPage.jsx";
 import DoctorsPage from "@/pages/admin/DoctorPage.jsx";
 import PatientsPage from "./pages/patients/PatientsPage";
 import EmployeesPage from "@/pages/employees/EmployeePage";
+import MedicalConsultationFormPage from "./pages/consultations/MedicalConsultationFormPage";
+import MedicalConsultationsPage from "./pages/consultations/MedicalConsultationsPage";
 import Forbidden from "@/pages/Forbidden.jsx"; // <-- tu página 403
 import { useAuth } from "@/hooks/use-auth";
+import AuthLayout from "@/layouts/AuthLayout.jsx";
 
 function RoleBasedHome() {
     const { user } = useAuth();
@@ -53,11 +55,11 @@ export default function App() {
                                 <Route path="/doctors" element={<DoctorsPage />} />
                             </Route>
 
-                            {/* --- DOCTOR, ADMIN ONLY --- */}
-                            <Route element={<ProtectedRoute allowedRoles={["DOCTOR","ADMIN"]} />}>
+                            {/* --- DOCTOR ONLY --- */}
+                            <Route element={<ProtectedRoute allowedRoles={["DOCTOR"]} />}>
                                 <Route path="/patients" element={<PatientsPage />} />
-                                {/* /consultations cuando lo implementes */}
-                                {/* <Route path="/consultations" element={<ConsultationsPage />} /> */}
+                                <Route path="/consultations" element={<MedicalConsultationsPage />} />
+                                <Route path="/consultations/form" element={<MedicalConsultationFormPage />} />
                             </Route>
                         </Route>
                     </Route>

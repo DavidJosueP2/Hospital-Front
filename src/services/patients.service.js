@@ -26,8 +26,13 @@ export const deletePatient = async (id) => {
 };
 
 export const parseFieldErrors = (error) => {
-  const errs = error?.response?.data?.errors;
+  const errs = error?.data?.errors;
   return errs && typeof errs === "object" ? errs : {};
+};
+
+export const listAllPatients = async (centerId) => {
+  const res = await api.get("/api/consulting/patients/all", { params: { centerId } });
+  return res.data;
 };
 
 export default {
@@ -37,4 +42,5 @@ export default {
   updatePatient,
   deletePatient,
   parseFieldErrors,
+  listAllPatients
 };

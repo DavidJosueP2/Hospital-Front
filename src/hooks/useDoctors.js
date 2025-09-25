@@ -16,6 +16,14 @@ export const useDoctor = (id, options = {}) =>
         ...options,
     });
 
+export const useDoctorByUser = (userId, options = {}) =>
+    useQuery({
+        queryKey: ["doctor-by-user", userId],
+        queryFn: () => doctors.getDoctorByUser(userId),
+        enabled: !!userId,
+        ...options,
+    });    
+
 export const useDoctorsBySpecialty = (specialtyId, params, options = {}) =>
     useQuery({
         queryKey: ["doctors-by-specialty", specialtyId, params],

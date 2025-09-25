@@ -60,7 +60,7 @@ api.interceptors.response.use(
     // ✅ Manejo específico para errores de validación (400)
     if (error.response.status === 400 && error.response.data?.errors) {
       return Promise.reject({
-        message: error.response.data?.detail || "Errores de validación",
+        message: error.response.data?.message || error.response.data?.detail || "Errores de validación",
         status: error.response.status,
         data: error.response.data, // ✅ Preservar toda la estructura
         type: "validation",

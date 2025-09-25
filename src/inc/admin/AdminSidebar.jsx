@@ -85,10 +85,8 @@ const NAV_ADMIN_PLATAFORMA = [{ to: "/playground", icon: FolderKanban, label: "P
 const NAV_ADMIN_GESTION = [
     { to: "/employees", icon: UserCog, label: "Empleados" },
     { to: "/doctors", icon: Stethoscope, label: "Doctores" },
-    { to: "/patients", icon: UserRound, label: "Pacientes" },
     { to: "/specialties", icon: ClipboardList, label: "Especialidades" },
     { to: "/centers", icon: Building2, label: "Centros médicos" },
-    { to: "/consultations", icon: ClipboardList, label: "Consultas médicas" },
 ];
 
 const NAV_DOCTOR_GESTION = [

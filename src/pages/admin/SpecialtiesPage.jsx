@@ -1,12 +1,5 @@
 import React from "react";
 import { toast } from "sonner";
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardContent,
-    CardFooter,
-} from "@/components/ui/shadcn/card";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
 import {
@@ -29,16 +22,14 @@ import {
 } from "@/components/ui/shadcn/alert-dialog";
 import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ClipboardList } from "lucide-react";
 import SpecialtyForm from "@/components/specialty/SpecialtyForm";
 import specialties from "@/services/specialties.service";
 
-// Columnas con ordenamiento por columna habilitado (no añadimos enableSorting:false)
-const baseColumns = (onEdit, onDelete) => [
+const columns = (onEdit, onDelete) => [
     {
         accessorKey: "id",
         header: "ID",
-        size: 72,
         cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span>,
     },
     {
@@ -56,11 +47,16 @@ const baseColumns = (onEdit, onDelete) => [
         ),
     },
     {
-        accessorKey: "createdAt",
-        header: "Creado",
-        size: 160,
-        cell: ({ row }) =>
-            row.original.createdAt ? new Date(row.original.createdAt).toLocaleString() : "—",
+        id: "status",
+        header: "Estado",
+        cell: ({ row }) => {
+            const isDeleted = !!row.original.deleted;
+            return (
+                <span className={isDeleted ? "text-red-600 font-medium" : "text-green-600 font-medium"}>
+          {isDeleted ? "Inactivo" : "Activo"}
+        </span>
+            );
+        },
     },
     {
         accessorKey: "updatedAt",
@@ -71,22 +67,35 @@ const baseColumns = (onEdit, onDelete) => [
     },
     {
         id: "actions",
-        header: "Acciones",
+        header: "Acciones", // alineado a la izquierda como el resto
         size: 96,
         cell: ({ row }) => {
             const d = row.original;
+            const disabled = !!d.deleted;
+
             return (
-                <div className="flex justify-end gap-1">
-                    <Button size="icon" variant="ghost" title="Editar" onClick={() => onEdit(d)}>
-                        <Pencil className="size-4" />
+                <div className="flex gap-1">
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        title={disabled ? "Especialidad inactiva" : "Editar"}
+                        onClick={() => !disabled && onEdit(d)}
+                        disabled={disabled}
+                    >
+                        <Pencil className={`size-4 ${disabled ? "text-muted-foreground" : ""}`} />
                     </Button>
                     <Button
                         size="icon"
                         variant="ghost"
-                        title="Eliminar"
-                        onClick={() => onDelete(d)}
+                        title={disabled ? "Especialidad inactiva" : "Eliminar"}
+                        onClick={() => !disabled && onDelete(d)}
+                        disabled={disabled}
                     >
-                        <Trash2 className="size-4 text-destructive" />
+                        <Trash2
+                            className={`size-4 ${
+                                disabled ? "text-muted-foreground" : "text-destructive"
+                            }`}
+                        />
                     </Button>
                 </div>
             );
@@ -95,26 +104,22 @@ const baseColumns = (onEdit, onDelete) => [
 ];
 
 export default function SpecialtiesPage() {
-    // Estado de paginación del servidor
     const [includeDeleted, setIncludeDeleted] = React.useState(false);
     const [pageIndex, setPageIndex] = React.useState(0);
     const [pageSize, setPageSize] = React.useState(10);
 
-    // Datos
     const [rows, setRows] = React.useState([]);
     const [total, setTotal] = React.useState(0);
     const [pageCount, setPageCount] = React.useState(0);
     const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState(null);
 
-    // Crear
     const [createOpen, setCreateOpen] = React.useState(false);
     const [createForm, setCreateForm] = React.useState({ name: "", description: "" });
     const [createErrors, setCreateErrors] = React.useState({});
     const [canCreate, setCanCreate] = React.useState(false);
     const [createPending, setCreatePending] = React.useState(false);
 
-    // Editar
     const [editOpen, setEditOpen] = React.useState(false);
     const [editId, setEditId] = React.useState(null);
     const [editForm, setEditForm] = React.useState({ name: "", description: "" });
@@ -122,7 +127,6 @@ export default function SpecialtiesPage() {
     const [canEdit, setCanEdit] = React.useState(false);
     const [editPending, setEditPending] = React.useState(false);
 
-    // Eliminar
     const [confirmOpen, setConfirmOpen] = React.useState(false);
     const [confirmId, setConfirmId] = React.useState(null);
     const [deletePending, setDeletePending] = React.useState(false);
@@ -135,8 +139,6 @@ export default function SpecialtiesPage() {
                 includeDeleted,
                 page: pageIndex,
                 size: pageSize,
-                // Si tu API acepta sort, puedes añadirlo aquí
-                // sort: "name,asc"
             });
             setRows(data?.content ?? []);
             setTotal(data?.totalElements ?? 0);
@@ -237,7 +239,6 @@ export default function SpecialtiesPage() {
             await specialties.deleteSpecialty(confirmId);
             setConfirmOpen(false);
             toast.success("Especialidad eliminada", { description: `ID ${confirmId}` });
-            // Si queda vacía la página actual, retrocede una
             if (rows.length === 1 && pageIndex > 0) {
                 setPageIndex((p) => p - 1);
             } else {
@@ -251,10 +252,11 @@ export default function SpecialtiesPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-6">
             <PageHeading
                 title="Especialidades"
                 subtitle="Crea, actualiza y administra las especialidades"
+                icon={ClipboardList}
                 actions={
                     <div className="flex gap-2">
                         <Button
@@ -278,14 +280,11 @@ export default function SpecialtiesPage() {
                 }
             />
 
-            <Card className="overflow-hidden">
-                <CardHeader className="pb-2">
-                    <CardTitle>Especialidades</CardTitle>
-                </CardHeader>
-
-                <CardContent>
+            {/* Contenedor igual al ejemplo */}
+            <div className="rounded-xl border bg-card">
+                <div className="p-4">
                     <DataTable
-                        columns={baseColumns(onEdit, onDelete)}
+                        columns={columns(onEdit, onDelete)}
                         data={rows}
                         manualPagination={true}
                         pageCount={Math.max(pageCount, 1)}
@@ -293,16 +292,19 @@ export default function SpecialtiesPage() {
                         state={{ pagination: { pageIndex, pageSize } }}
                         onPaginationChange={onPaginationChange}
                         emptyMessage={isLoading ? "Cargando..." : error ? error : "Sin datos"}
-                        searchable={false} // sin filtros ni buscador
-                        className="[&_th]:py-2 [&_td]:py-2"
+                        searchable={false}
                     />
-                </CardContent>
+                </div>
 
-                <CardFooter className="text-sm text-muted-foreground">
-                    Total: {total}
-                    <Separator className="mx-3 h-4" orientation="vertical" />
-                    Página {pageIndex + 1} de {Math.max(pageCount, 1)}
-                    <Separator className="mx-3 h-4" orientation="vertical" />
+                <div className="flex items-center justify-between px-4 py-2 text-sm text-muted-foreground">
+                    <div>
+                        Total: {total}
+                        <Separator
+                            className="mx-3 h-4 inline-block align-middle"
+                            orientation="vertical"
+                        />
+                        Página {pageIndex + 1} de {Math.max(pageCount, 1)}
+                    </div>
                     <Button
                         variant="ghost"
                         size="sm"
@@ -312,8 +314,8 @@ export default function SpecialtiesPage() {
                         {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
                         Refrescar
                     </Button>
-                </CardFooter>
-            </Card>
+                </div>
+            </div>
 
             {/* Crear */}
             <Dialog open={createOpen} onOpenChange={(o) => !createPending && setCreateOpen(o)}>
@@ -370,9 +372,7 @@ export default function SpecialtiesPage() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>¿Eliminar especialidad?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta acción no se puede deshacer.
-                        </AlertDialogDescription>
+                        <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={deletePending}>Cancelar</AlertDialogCancel>
