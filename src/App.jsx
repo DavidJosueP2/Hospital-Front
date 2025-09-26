@@ -20,60 +20,63 @@ import Forbidden from "@/pages/Forbidden.jsx"; // <-- tu página 403
 import { useAuth } from "@/hooks/use-auth";
 import AuthLayout from "@/layouts/AuthLayout.jsx";
 import SpecialtiesOfferPage from "@/pages/specialty/SpecialtiesOfferPage.jsx";
+import ProfilePage from "@/pages/profile/ProfilePage";
 
 function RoleBasedHome() {
-    const { user } = useAuth();
-    const roles = Array.isArray(user?.roles) ? user.roles.map(r => String(r).toUpperCase()) : [];
-    if (roles.includes("ADMIN")) return <Navigate to="/playground" replace />;
-    if (roles.includes("DOCTOR")) return <Navigate to="/patients" replace />;
-    return <Navigate to="/forbidden" replace />;
+  const { user } = useAuth();
+  const roles = Array.isArray(user?.roles)
+    ? user.roles.map((r) => String(r).toUpperCase())
+    : [];
+  if (roles.includes("ADMIN")) return <Navigate to="/playground" replace />;
+  if (roles.includes("DOCTOR")) return <Navigate to="/patients" replace />;
+  return <Navigate to="/forbidden" replace />;
 }
 
 export default function App() {
-    return (
-        <ErrorBoundary>
-            <AuthProvider>
-                <Routes>
-                    {/* Auth (público) */}
-                    <Route element={<AuthLayout />}>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/password-recovery" element={<PasswordRecovery />} />
-                        <Route path="/reset" element={<ResetPassword />} />
-                    </Route>
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <Routes>
+          {/* Auth (público) */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/password-recovery" element={<PasswordRecovery />} />
+            <Route path="/reset" element={<ResetPassword />} />
+          </Route>
 
-                    {/* Bloque protegido: requiere login */}
-                    <Route element={<ProtectedRoute />}>
-                        <Route element={<AdminLayout />}>
-                            {/* Index home según rol */}
-                            <Route index element={<RoleBasedHome />} />
+          {/* Bloque protegido: requiere login */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/profile" element={<ProfilePage />} />
+              {/* Index home según rol */}
+              <Route index element={<RoleBasedHome />} />
 
-                            {/* --- ADMIN ONLY --- */}
-                            <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-                                <Route path="/playground" element={<Playground />} />
-                                <Route path="/employees" element={<EmployeesPage />} />
-                                <Route path="/centers" element={<MedicalCentersPage />} />
-                                <Route path="/specialties" element={<SpecialtiesPage />} />
-                                <Route path="/doctors" element={<DoctorsPage />} />
-                            </Route>
+              {/* --- ADMIN ONLY --- */}
+              <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+                <Route path="/playground" element={<Playground />} />
+                <Route path="/employees" element={<EmployeesPage />} />
+                <Route path="/centers" element={<MedicalCentersPage />} />
+                <Route path="/specialties" element={<SpecialtiesPage />} />
+                <Route path="/doctors" element={<DoctorsPage />} />
+              </Route>
 
-                            {/* --- DOCTOR ONLY --- */}
-                            <Route element={<ProtectedRoute allowedRoles={["DOCTOR"]} />}>
-                                <Route path="/patients" element={<PatientsPage />} />
-                                <Route path="/consultations" element={<MedicalConsultationsPage />} />
-                                <Route path="/consultations/form" element={<MedicalConsultationFormPage />} />
+              {/* --- DOCTOR ONLY --- */}
+              <Route element={<ProtectedRoute allowedRoles={["DOCTOR"]} />}>
+                <Route path="/patients" element={<PatientsPage />} />
+                <Route path="/consultations" element={<MedicalConsultationsPage />} />
+                <Route path="/consultations/form" element={<MedicalConsultationFormPage />} />
+                <Route path="/specialties-offer" element={<SpecialtiesOfferPage />} />
+              </Route>
+            </Route>
+          </Route>
 
-                                <Route path="/specialties-offer" element={<SpecialtiesOfferPage />} />
-                            </Route>
-                        </Route>
-                    </Route>
+          {/* 403 y 404 (públicos) */}
+          <Route path="/forbidden" element={<Forbidden />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
 
-                    {/* 403 y 404 (públicos) */}
-                    <Route path="/forbidden" element={<Forbidden />} />
-                    <Route path="*" element={<NotFound />} />
-                </Routes>
-
-                <AppToaster />
-            </AuthProvider>
-        </ErrorBoundary>
-    );
+        <AppToaster />
+      </AuthProvider>
+    </ErrorBoundary>
+  );
 }

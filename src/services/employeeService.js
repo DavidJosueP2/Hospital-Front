@@ -35,6 +35,32 @@ const employees = {
     const res = await api.post("/auth/register", payload);
     return res.data;
   },
+
+  async updateEmployee(id, data) {
+    const payload = {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      gender: data.gender,
+    };
+
+    const res = await api.put(`/auth/users/${id}`, payload);
+    return res.data;
+  },
+
+  async updateProfile(id, data) {
+    const payload = {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      gender: data.gender,
+    };
+
+    console.log("Sending", payload);
+    console.log("Id", id);
+
+    const res = await api.put(`/auth/users/${id}`, payload);
+    console.log("Res", res);
+    return res.data;
+  },
 };
 
 export default employees;

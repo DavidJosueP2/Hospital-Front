@@ -2,89 +2,18 @@ import React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
-import {Loader2, Plus, Trash2, UserCog} from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, UserCog } from "lucide-react";
 import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import employees from "@/services/employeeService";
 import CreateEmployeeDialog from "@/components/employees/CreateEmployeeDialog";
-
-const columns = (onDelete) => [
-  {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => <span className="tabular-nums">{row.original.id}</span>,
-  },
-  {
-    id: "user",
-    header: "Usuario",
-    cell: ({ row }) => {
-      const d = row.original;
-      const title = d.gender === "FEMALE" ? "Sra." : "Sr.";
-      const fullName =
-        [d.firstName, d.lastName].filter(Boolean).join(" ") || d.username;
-      return (
-        <div className="leading-snug">
-          <div className="font-medium">
-            {title} {fullName}
-          </div>
-          <div className="text-xs text-muted-foreground">C.I. {d.username}</div>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "email",
-    header: "Correo",
-    cell: ({ row }) => row.original.email || "—",
-  },
-  {
-    accessorKey: "center_name",
-    header: "Centro",
-    cell: ({ row }) => row.original.center_name || "—",
-  },
-  {
-    accessorKey: "enabled",
-    header: "Estado",
-    cell: ({ row }) => (
-      <span
-        className={
-          row.original.enabled
-            ? "text-green-600 font-medium"
-            : "text-red-600 font-medium"
-        }
-      >
-        {row.original.enabled ? "Activo" : "Inactivo"}
-      </span>
-    ),
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const d = row.original;
-      const disabled = !d.enabled;
-
-      return (
-        <Button
-          size="icon"
-          variant="ghost"
-          title={disabled ? "Empleado inactivo" : "Deshabilitar"}
-          onClick={() => !disabled && onDelete(d)}
-          disabled={disabled}
-        >
-          <Trash2
-            className={`size-4 ${
-              disabled ? "text-muted-foreground" : "text-destructive"
-            }`}
-          />
-        </Button>
-      );
-    },
-  },
-];
+import EditEmployeeDialog from "@/components/employees/EditEmployeeDialog";
 
 export default function EmployeesPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [editEmployee, setEditEmployee] = React.useState(null);
+
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(10);
   const [includeDeleted, setIncludeDeleted] = React.useState(false);
@@ -133,9 +62,7 @@ export default function EmployeesPage() {
     setDeletePending(true);
     try {
       await employees.deleteEmployee(employee.id);
-      toast.success("Empleado eliminado", {
-        description: `ID ${employee.id}`,
-      });
+      toast.success("Empleado eliminado", { description: `ID ${employee.id}` });
       await load();
     } catch (e) {
       const msg =
@@ -146,17 +73,109 @@ export default function EmployeesPage() {
     }
   };
 
+  const columns = [
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => (
+        <span className="tabular-nums">{row.original.id}</span>
+      ),
+    },
+    {
+      id: "user",
+      header: "Usuario",
+      cell: ({ row }) => {
+        const d = row.original;
+        const title = d.gender === "FEMALE" ? "Sra." : "Sr.";
+        const fullName =
+          [d.firstName, d.lastName].filter(Boolean).join(" ") || d.username;
+        return (
+          <div className="leading-snug">
+            <div className="font-medium">
+              {title} {fullName}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              C.I. {d.username}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "email",
+      header: "Correo",
+      cell: ({ row }) => row.original.email || "—",
+    },
+    {
+      accessorKey: "center_name",
+      header: "Centro",
+      cell: ({ row }) => row.original.center_name || "—",
+    },
+    {
+      accessorKey: "enabled",
+      header: "Estado",
+      cell: ({ row }) => (
+        <span
+          className={
+            row.original.enabled
+              ? "text-green-600 font-medium"
+              : "text-red-600 font-medium"
+          }
+        >
+          {row.original.enabled ? "Activo" : "Inactivo"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Acciones",
+      cell: ({ row }) => {
+        const d = row.original;
+        const disabled = !d.enabled;
+
+        return (
+          <div className="flex gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Editar"
+              onClick={() => {
+                setEditEmployee(d);
+                setEditOpen(true);
+              }}
+            >
+              <Pencil className="size-4" />
+            </Button>
+
+            <Button
+              size="icon"
+              variant="ghost"
+              title={disabled ? "Empleado inactivo" : "Deshabilitar"}
+              onClick={() => !disabled && handleDelete(d)}
+              disabled={disabled}
+            >
+              <Trash2
+                className={`size-4 ${
+                  disabled ? "text-muted-foreground" : "text-destructive"
+                }`}
+              />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="space-y-6 p-6">
       <PageHeading
         title="Empleados"
-        subtitle="Visualiza empleados, crea o elimina."
+        subtitle="Visualiza empleados, crea, edita o elimina."
         icon={UserCog}
         actions={
           <div className="flex gap-2">
             <Button onClick={() => setCreateOpen(true)}>
-                <Plus className="mr-2 size-4" />
-                Nuevo empleado
+              <Plus className="mr-2 size-4" /> Nuevo empleado
             </Button>
             <Button
               variant="outline"
@@ -178,54 +197,66 @@ export default function EmployeesPage() {
         onOpenChange={setCreateOpen}
         onSuccess={load}
       />
+      <EditEmployeeDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        employee={editEmployee}
+        onSuccess={load}
+      />
 
-      <div className="rounded-xl border bg-card">
-          <div className="rounded-xl border bg-card">
-              <div className="flex items-center justify-between px-6 pt-6 pb-2">
-                  <div>
-                      <h3 className="text-base font-semibold text-foreground">Empleados</h3>
-                      <p className="text-sm text-muted-foreground">Directorio administrativo del personal</p>
-                  </div>
-                  <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
-      <span className="inline-flex items-center gap-1">
-        <span className="size-2 rounded-full bg-green-500" />
-        Activo
-      </span>
-                      <span className="inline-flex items-center gap-1">
-        <span className="size-2 rounded-full bg-red-500" />
-        Inactivo
-      </span>
-                  </div>
-              </div>
+        {/* Card estandarizada — Empleados */}
+        <div className="rounded-xl border bg-card">
+            {/* Encabezado */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-2">
+                <div>
+                    <h3 className="text-base font-semibold text-foreground">Empleados</h3>
+                    <p className="text-sm text-muted-foreground">Directorio administrativo del personal</p>
+                </div>
+                <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-green-500" />
+                    Activo
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-red-500" />
+                    Inactivo
+                  </span>
+                </div>
+            </div>
 
-              <div className="p-6 pt-6 pb-4">
-                  <DataTable
-                      columns={columns(handleDelete)}
-                      data={rows}
-                      manualPagination={true}
-                      pageCount={Math.max(totalPages, 1)}
-                      totalRows={totalElements}
-                      state={{ pagination: { pageIndex: page, pageSize } }}
-                      onPaginationChange={handlePaginationChange}
-                      emptyMessage={isLoading ? "Cargando..." : error ? error : "Sin datos"}
-                      searchable={false}
-                  />
-              </div>
+            {/* Tabla */}
+            <div className="p-6 pt-6 pb-4">
+                <DataTable
+                    columns={columns}
+                    data={rows}
+                    manualPagination
+                    pageCount={Math.max(totalPages, 1)}
+                    totalRows={totalElements}
+                    state={{ pagination: { pageIndex: page, pageSize } }}
+                    onPaginationChange={handlePaginationChange}
+                    emptyMessage={
+                        isLoading ? "Cargando..." : error ? error : "Sin datos"
+                    }
+                    searchable={false}
+                />
+            </div>
 
-              <div className="flex items-center justify-between px-4 py-2 text-[0.95rem] text-muted-foreground">
-                  <div>
-                      Total: {totalElements}
-                      <Separator className="mx-3 h-4 inline-block align-middle" orientation="vertical" />
-                      Página {page + 1} de {Math.max(totalPages, 1)}
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={load} disabled={isLoading}>
-                      {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                      Refrescar
-                  </Button>
-              </div>
-          </div>
+            {/* Pie */}
+            <div className="flex items-center justify-between px-6 py-3 text-[0.95rem] text-muted-foreground">
+                <div>
+                    Total: {totalElements}
+                    <Separator className="mx-3 h-4 inline-block align-middle" orientation="vertical" />
+                    Página {page + 1} de {Math.max(totalPages, 1)}
+                </div>
+                <Button variant="ghost" size="sm" onClick={load} disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                    Refrescar
+                </Button>
+            </div>
 
-      </div>
+            {/* respiración inferior */}
+            <div className="pb-2" />
+        </div>
     </div>
   );
 }
