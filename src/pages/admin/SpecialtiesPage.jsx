@@ -47,14 +47,14 @@ const columns = (onEdit, onDelete) => [
         ),
     },
     {
-        id: "status",
+        accessorKey: "deleted",
         header: "Estado",
         cell: ({ row }) => {
             const isDeleted = !!row.original.deleted;
             return (
                 <span className={isDeleted ? "text-red-600 font-medium" : "text-green-600 font-medium"}>
-          {isDeleted ? "Inactivo" : "Activo"}
-        </span>
+                  {isDeleted ? "Inactivo" : "Activo"}
+                </span>
             );
         },
     },
@@ -280,9 +280,25 @@ export default function SpecialtiesPage() {
                 }
             />
 
-            {/* Contenedor igual al ejemplo */}
             <div className="rounded-xl border bg-card">
-                <div className="p-4">
+                <div className="flex items-center justify-between px-6 pt-6 pb-2">
+                    <div>
+                        <h3 className="text-base font-semibold text-foreground">Especialidades</h3>
+                        <p className="text-sm text-muted-foreground">Catálogo administrativo de especialidades médicas</p>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="size-2 rounded-full bg-green-500" />
+                        Activa
+                      </span>
+                                        <span className="inline-flex items-center gap-1">
+                        <span className="size-2 rounded-full bg-red-500" />
+                        Inactiva
+                      </span>
+                    </div>
+                </div>
+
+                <div className="p-6 pt-6 pb-4">
                     <DataTable
                         columns={columns(onEdit, onDelete)}
                         data={rows}
@@ -296,13 +312,10 @@ export default function SpecialtiesPage() {
                     />
                 </div>
 
-                <div className="flex items-center justify-between px-4 py-2 text-sm text-muted-foreground">
+                <div className="flex items-center justify-between px-4 py-2 text-[0.95rem] text-muted-foreground">
                     <div>
                         Total: {total}
-                        <Separator
-                            className="mx-3 h-4 inline-block align-middle"
-                            orientation="vertical"
-                        />
+                        <Separator className="mx-3 h-4 inline-block align-middle" orientation="vertical" />
                         Página {pageIndex + 1} de {Math.max(pageCount, 1)}
                     </div>
                     <Button

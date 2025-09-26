@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@import url('https://fonts.googleapis.com/css2?family=Onest:wght@100..900&display=swap');
+
 @custom-variant dark (&:is(.dark *));
 
 :root{
@@ -37,6 +39,9 @@
     --muted-foreground:oklch(.52 0 0);
     --destructive:oklch(.62 .18 27);
 
+    --primary-hover: color-mix(in oklab, var(--brand-2), white 10%);
+    --primary-active: color-mix(in oklab, var(--brand-3), black 6%);
+
     /* Charts opcional */
     --chart-1:oklch(.80 .07 200);
     --chart-2:oklch(.78 .07 160);
@@ -53,6 +58,13 @@
     --sidebar-accent-foreground:oklch(.205 0 0);
     --sidebar-border:oklch(.92 0 0);
     --sidebar-ring:var(--ring);
+}
+
+@theme {
+    --font-sans: "Onest", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue",
+    Arial, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 @theme inline{
@@ -125,6 +137,9 @@
     --muted-foreground:oklch(.72 0 0);
     --destructive:oklch(.62 .18 27);
 
+    --primary-hover: color-mix(in oklab, var(--brand-2), black 10%);
+    --primary-active: color-mix(in oklab, var(--brand-3), black 16%);
+
     --sidebar:oklch(.20 0 0);
     --sidebar-foreground:oklch(.985 0 0);
     --sidebar-primary:var(--primary);
@@ -142,7 +157,7 @@
 @layer base{
     *{@apply border-border outline-ring/50}
     html,body,#root{height:100%}
-    body{@apply bg-background text-foreground antialiased}
+    body{@apply bg-background text-foreground antialiased font-sans}
 }
 
 #root{max-width:none!important;margin:0!important;padding:0!important;text-align:unset!important}

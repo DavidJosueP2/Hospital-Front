@@ -1,6 +1,7 @@
 import React from "react";
 import { Separator } from "@/components/ui/shadcn/separator";
 import { Stars } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export function PageHeading({
                                 title,
@@ -14,30 +15,52 @@ export function PageHeading({
                             }) {
     const LeadingIcon = Icon ?? TitleIcon;
 
+    // Tema actual (next-themes) – evita hydration mismatch
+    const { theme, systemTheme } = useTheme();
+    const [mounted, setMounted] = React.useState(false);
+    React.useEffect(() => setMounted(true), []);
+    const resolved = theme === "system" ? systemTheme : theme;
+    const isDark = mounted && resolved === "dark";
+
+    // Blobs: mezcla con tu velo mint (sin negros/blancos duros)
+    const veilPct = isDark ? 24 : 16;
+    const blobStyle = (brandVar) => ({
+        backgroundImage: `radial-gradient(closest-side,
+      color-mix(in oklab, var(${brandVar}), var(--brand-veil) ${veilPct}% ) 0%,
+      transparent 70%)`,
+        filter: isDark ? "saturate(110%) brightness(0.98)" : "saturate(110%)",
+    });
+
+    // Línea central petrol/teal que combina con tus mints
+    const petrolLight = "oklch(0.78 0.10 210)";
+    const petrolDark  = "oklch(0.84 0.09 210)";
+    const sepCore = isDark ? petrolDark : petrolLight;
+
+    // Bordes exteriores mint (ligeros)
+    const mintEdge = isDark
+        ? "linear-gradient(to right, transparent, color-mix(in oklab, var(--brand-1), transparent 60%), transparent)"
+        : "linear-gradient(to right, transparent, color-mix(in oklab, var(--brand-1), transparent 34%), transparent)";
+
     return (
         <div
             className={[
                 "relative w-full overflow-hidden hero-surface",
-                "px-6 py-10 sm:px-10 md:py-12 lg:px-14",
+                "px-6 py-6 sm:px-10 md:py-8 lg:px-14 xl:py-10",
                 "bg-hero-mint",
                 className,
             ].join(" ")}
         >
             <div className="liquid-pill" aria-hidden />
             <div className="pointer-events-none absolute inset-0 glass-edge" />
+
+            {/* Blobs mint suaves */}
             <div
                 className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full"
-                style={{
-                    backgroundImage:
-                        "radial-gradient(closest-side, color-mix(in oklab, var(--brand-2), white 30%) 0%, transparent 70%)",
-                }}
+                style={blobStyle("--brand-2")}
             />
             <div
                 className="pointer-events-none absolute -bottom-28 -right-28 h-96 w-96 rounded-full"
-                style={{
-                    backgroundImage:
-                        "radial-gradient(closest-side, color-mix(in oklab, var(--brand-3), white 30%) 0%, transparent 70%)",
-                }}
+                style={blobStyle("--brand-3")}
             />
 
             <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -61,7 +84,7 @@ export function PageHeading({
                         ) : null}
 
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-extrabold tracking-tight leading-tight md:text-4xl text-foreground">
+                            <h1 className="text-3xl font-semibold tracking-tight leading-tight md:text-4xl text-foreground">
                                 {title}
                             </h1>
                         </div>
@@ -77,10 +100,35 @@ export function PageHeading({
                 {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
             </div>
 
-            {children ? <div className="relative z-10 mt-5">{children}</div> : null}
+            {/* ⬇️ Un pelín menos espacio antes del contenido secundario */}
+            {children ? <div className="relative z-10 mt-4">{children}</div> : null}
 
-            <div className="relative z-10 mt-6">
-                <Separator className="h-[1px] bg-gradient-to-r from-transparent via-[color-mix(in_oklab,var(--brand),transparent_70%)] to-transparent" />
+            {/* Separador: centro petrol/teal que resalta + doble borde mint exterior */}
+            {/* ⬇️ Menos espacio antes del separador */}
+            <div className="relative z-10 mt-4">
+                <div className="relative w-full">
+                    {/* Bordes mint exteriores */}
+                    <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-0 -top-px h-px"
+                        style={{ backgroundImage: mintEdge }}
+                    />
+                    <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-0 -bottom-px h-px"
+                        style={{ backgroundImage: mintEdge }}
+                    />
+
+                    {/* Línea central (petrol) */}
+                    <Separator
+                        className="relative h-[2px] rounded-full"
+                        style={{
+                            backgroundImage: `linear-gradient(to right, transparent, var(--sep-core), transparent)`,
+                            boxShadow: `0 0 10px color-mix(in oklab, var(--sep-core), transparent 88%)`,
+                            ["--sep-core"]: sepCore,
+                        }}
+                    />
+                </div>
             </div>
         </div>
     );

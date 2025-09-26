@@ -56,16 +56,15 @@ const baseColumns = (onEdit, onDelete) => [
         header: "Especialidad",
         cell: ({ row }) => row.original.specialtyName || "—",
     },
-    // NUEVO: Estado calculado desde `deleted`
     {
-        id: "status",
+        accessorKey: "deleted",
         header: "Estado",
         cell: ({ row }) => {
             const isDeleted = !!row.original.deleted;
             return (
                 <span className={isDeleted ? "text-red-600 font-medium" : "text-green-600 font-medium"}>
-          {isDeleted ? "Inactivo" : "Activo"}
-        </span>
+                  {isDeleted ? "Inactivo" : "Activo"}
+                </span>
             );
         },
     },
@@ -225,7 +224,26 @@ export default function DoctorsPage() {
 
             <Card className="overflow-hidden">
                 <CardHeader className="pb-2">
-                    <CardTitle>Doctores</CardTitle>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-base">Doctores</CardTitle>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Listado administrativo de profesionales
+                            </p>
+                        </div>
+
+                        {/* Leyenda de estados */}
+                        <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="size-2 rounded-full bg-green-500" />
+                            Activo
+                          </span>
+                                                <span className="inline-flex items-center gap-1">
+                            <span className="size-2 rounded-full bg-red-500" />
+                            Inactivo
+                          </span>
+                        </div>
+                    </div>
                 </CardHeader>
 
                 <CardContent>

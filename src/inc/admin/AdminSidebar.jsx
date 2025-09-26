@@ -102,6 +102,7 @@ const NAV_ADMIN_GESTION = [
 const NAV_DOCTOR_GESTION = [
   { to: "/patients", icon: UserRound, label: "Pacientes" },
   { to: "/consultations", icon: ClipboardList, label: "Consultas médicas" },
+  { to: "/specialties-offer", icon: Stethoscope, label: "Especialidades" },
 ];
 
 const NAV_DOCS = [{ to: "/docs", icon: BookText, label: "Guías & Manuales" }];
@@ -177,22 +178,6 @@ export default function AdminSidebar() {
           <SidebarSeparator className="sidebar-divider my-2" />
         </Can>
 
-        <Can allowedRoles={["ADMIN"]}>
-          <SidebarGroup>
-            <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-              Plataforma
-            </SidebarGroupLabel>
-            <SidebarGroupContent className="overflow-hidden">
-              <SidebarMenu>
-                {NAV_ADMIN_PLATAFORMA.map((item) => (
-                  <NavItem key={item.to} {...item} />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarSeparator className="sidebar-divider my-2" />
-        </Can>
-
         <SidebarGroup>
           <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
             Gestión clínica
@@ -215,7 +200,23 @@ export default function AdminSidebar() {
 
         <SidebarSeparator className="sidebar-divider my-2" />
 
-        <SidebarGroup>
+          <Can allowedRoles={["ADMIN"]}>
+            <SidebarGroup>
+              <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
+                  Plataforma
+              </SidebarGroupLabel>
+              <SidebarGroupContent className="overflow-hidden">
+                <SidebarMenu>
+                  {NAV_ADMIN_PLATAFORMA.map((item) => (
+                      <NavItem key={item.to} {...item} />
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          <SidebarSeparator className="sidebar-divider my-2" />
+          </Can>
+
+          <SidebarGroup>
           <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
             Documentación
           </SidebarGroupLabel>
@@ -258,8 +259,8 @@ export default function AdminSidebar() {
                   >
                     <Avatar
                       className={`flex items-center justify-center rounded-full text-white font-bold
-    ${collapsed ? "h-9 w-9 text-sm" : "h-8 w-10 text-base"} 
-    bg-gray-500`}
+                        ${collapsed ? "h-9 w-9 text-sm" : "h-8 w-10 text-base"} 
+                        bg-gray-500`}
                     >
                       {user
                         ? `${user.first_name[0]?.toUpperCase()}${user.last_name[0]?.toUpperCase()}`

@@ -19,6 +19,7 @@ import MedicalConsultationsPage from "./pages/consultations/MedicalConsultations
 import Forbidden from "@/pages/Forbidden.jsx"; // <-- tu página 403
 import { useAuth } from "@/hooks/use-auth";
 import AuthLayout from "@/layouts/AuthLayout.jsx";
+import SpecialtiesOfferPage from "@/pages/specialty/SpecialtiesOfferPage.jsx";
 import ProfilePage from "@/pages/profile/ProfilePage";
 
 function RoleBasedHome() {
@@ -62,14 +63,9 @@ export default function App() {
               {/* --- DOCTOR ONLY --- */}
               <Route element={<ProtectedRoute allowedRoles={["DOCTOR"]} />}>
                 <Route path="/patients" element={<PatientsPage />} />
-                <Route
-                  path="/consultations"
-                  element={<MedicalConsultationsPage />}
-                />
-                <Route
-                  path="/consultations/form"
-                  element={<MedicalConsultationFormPage />}
-                />
+                <Route path="/consultations" element={<MedicalConsultationsPage />} />
+                <Route path="/consultations/form" element={<MedicalConsultationFormPage />} />
+                <Route path="/specialties-offer" element={<SpecialtiesOfferPage />} />
               </Route>
             </Route>
           </Route>
