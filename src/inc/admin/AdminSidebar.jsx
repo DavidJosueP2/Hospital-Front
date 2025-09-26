@@ -291,6 +291,16 @@ export default function AdminSidebar() {
                   {user ? `${user.first_name} ${user.last_name}` : "Usuario"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+
+                {/* 👉 Nuevo item de perfil */}
+                <DropdownMenuItem
+                  onClick={() => navigate("/profile")}
+                  className="focus:bg-muted"
+                >
+                  Mi perfil
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="text-red-600 focus:bg-red-100"
