@@ -76,54 +76,57 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center">
-      <Card className="w-full max-w-2xl shadow-2xl rounded-xl p-8 bg-white max-h-[90vh] overflow-auto">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-2xl rounded-2xl p-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
         <CardHeader className="flex flex-col items-center space-y-4">
-          <Avatar className="h-24 w-24">
-            <AvatarImage
-              src="https://i.pravatar.cc/128?img=3"
-              alt="user-avatar"
-            />
-            <AvatarFallback>
-              {user
-                ? user.first_name[0]?.toUpperCase() +
-                  user.last_name[0]?.toUpperCase()
-                : "U"}
-            </AvatarFallback>
+          <Avatar className="h-28 w-28 bg-gray-500 dark:bg-gray-700 text-white flex items-center justify-center rounded-full text-4xl font-extrabold shadow-lg">
+            {user
+              ? `${user.first_name[0]?.toUpperCase()}${user.last_name[0]?.toUpperCase()}`
+              : "U"}
           </Avatar>
-          <CardTitle className="text-3xl font-bold">Edit Profile</CardTitle>
-          <CardDescription className="text-center text-gray-600">
+          <CardTitle className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Edit Profile
+          </CardTitle>
+          <CardDescription className="text-center text-gray-600 dark:text-gray-300">
             Update your personal information below
           </CardDescription>
         </CardHeader>
 
-        <Separator className="my-6" />
+        <Separator className="my-6 border-t border-gray-200 dark:border-gray-700" />
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
             <div className="grid gap-2">
-              <Label>First name</Label>
+              <Label className="text-gray-900 dark:text-gray-100">
+                First name
+              </Label>
               <Input
                 value={form.firstName}
                 onChange={(e) => onChange("firstName", e.target.value)}
                 placeholder="Your name"
-                className="rounded-lg shadow-sm"
+                className="rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500"
               />
               {errors.firstName && (
-                <p className="text-xs text-destructive">{errors.firstName}</p>
+                <p className="text-xs text-destructive dark:text-red-400">
+                  {errors.firstName}
+                </p>
               )}
             </div>
 
             <div className="grid gap-2">
-              <Label>Last name</Label>
+              <Label className="text-gray-900 dark:text-gray-100">
+                Last name
+              </Label>
               <Input
                 value={form.lastName}
                 onChange={(e) => onChange("lastName", e.target.value)}
                 placeholder="Your last name"
-                className="rounded-lg shadow-sm"
+                className="rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500"
               />
               {errors.lastName && (
-                <p className="text-xs text-destructive">{errors.lastName}</p>
+                <p className="text-xs text-destructive dark:text-red-400">
+                  {errors.lastName}
+                </p>
               )}
             </div>
           </CardContent>
@@ -131,7 +134,7 @@ export default function ProfilePage() {
           <CardFooter className="mt-6">
             <Button
               type="submit"
-              className="w-full py-3 text-lg font-medium hover:bg-blue-600 transition-colors"
+              className="w-full py-3 text-lg font-medium bg-gray-400 hover:bg-gray-500 text-white dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg shadow-md transition-colors flex justify-center items-center"
               disabled={pending}
             >
               {pending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}

@@ -2,7 +2,7 @@ import React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { Loader2, Plus, Trash2, UserCog } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, UserCog } from "lucide-react";
 import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import employees from "@/services/employeeService";
@@ -144,7 +144,7 @@ export default function EmployeesPage() {
                 setEditOpen(true);
               }}
             >
-              <UserCog className="size-4" />
+              <Pencil className="size-4" />
             </Button>
 
             <Button
