@@ -1,13 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/shadcn/button";
 import { Separator } from "@/components/ui/shadcn/separator";
-import { Loader2, Pencil, Plus, Trash2, UserCog } from "lucide-react";
+import { Eye, Loader2, Pencil, Plus, Trash2, UserCog } from "lucide-react";
 import DataTable from "@/components/ui/table/data-table-pb";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import employees from "@/services/employeeService";
 import CreateEmployeeDialog from "@/components/employees/CreateEmployeeDialog";
 import EditEmployeeDialog from "@/components/employees/EditEmployeeDialog";
+import ViewEmployeeDialog from "@/components/employees/ViewEmployeeDialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/shadcn/alert-dialog";
 
 export default function EmployeesPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -24,6 +35,9 @@ export default function EmployeesPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
   const [deletePending, setDeletePending] = React.useState(false);
+
+  const [viewOpen, setViewOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const load = React.useCallback(async () => {
     setIsLoading(true);
@@ -57,17 +71,32 @@ export default function EmployeesPage() {
     }
   };
 
-  const handleDelete = async (employee) => {
-    if (!confirm(`¿Eliminar empleado ID ${employee.id}?`)) return;
+  // dentro del componente EmployeesPage
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmId, setConfirmId] = useState(null);
+
+  // función para abrir confirmación
+  const onDelete = (employee) => {
+    setConfirmId(employee.id);
+    setConfirmOpen(true);
+  };
+
+  // función para eliminar
+  const submitDelete = async () => {
+    if (!confirmId) return;
     setDeletePending(true);
     try {
-      await employees.deleteEmployee(employee.id);
-      toast.success("Empleado eliminado", { description: `ID ${employee.id}` });
-      await load();
+      await employees.deleteEmployee(confirmId);
+      toast.success("Empleado eliminado", { description: `ID ${confirmId}` });
+      setConfirmOpen(false);
+      // si era la última fila de la página, retrocedemos una página
+      if (rows.length === 1 && page > 0) {
+        setPage((p) => p - 1);
+      } else {
+        await load();
+      }
     } catch (e) {
-      const msg =
-        e?.response?.data?.detail || e?.message || "Error al eliminar";
-      toast.error(msg);
+      toast.error(e?.response?.data?.detail || e?.message || "Error");
     } finally {
       setDeletePending(false);
     }
@@ -151,7 +180,7 @@ export default function EmployeesPage() {
               size="icon"
               variant="ghost"
               title={disabled ? "Empleado inactivo" : "Deshabilitar"}
-              onClick={() => !disabled && handleDelete(d)}
+              onClick={() => !disabled && onDelete(d)}
               disabled={disabled}
             >
               <Trash2
@@ -203,60 +232,96 @@ export default function EmployeesPage() {
         employee={editEmployee}
         onSuccess={load}
       />
+      <ViewEmployeeDialog
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        employee={selectedEmployee}
+      />
 
-        {/* Card estandarizada — Empleados */}
-        <div className="rounded-xl border bg-card">
-            {/* Encabezado */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-2">
-                <div>
-                    <h3 className="text-base font-semibold text-foreground">Empleados</h3>
-                    <p className="text-sm text-muted-foreground">Directorio administrativo del personal</p>
-                </div>
-                <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="size-2 rounded-full bg-green-500" />
-                    Activo
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <span className="size-2 rounded-full bg-red-500" />
-                    Inactivo
-                  </span>
-                </div>
-            </div>
-
-            {/* Tabla */}
-            <div className="p-6 pt-6 pb-4">
-                <DataTable
-                    columns={columns}
-                    data={rows}
-                    manualPagination
-                    pageCount={Math.max(totalPages, 1)}
-                    totalRows={totalElements}
-                    state={{ pagination: { pageIndex: page, pageSize } }}
-                    onPaginationChange={handlePaginationChange}
-                    emptyMessage={
-                        isLoading ? "Cargando..." : error ? error : "Sin datos"
-                    }
-                    searchable={false}
-                />
-            </div>
-
-            {/* Pie */}
-            <div className="flex items-center justify-between px-6 py-3 text-[0.95rem] text-muted-foreground">
-                <div>
-                    Total: {totalElements}
-                    <Separator className="mx-3 h-4 inline-block align-middle" orientation="vertical" />
-                    Página {page + 1} de {Math.max(totalPages, 1)}
-                </div>
-                <Button variant="ghost" size="sm" onClick={load} disabled={isLoading}>
-                    {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                    Refrescar
-                </Button>
-            </div>
-
-            {/* respiración inferior */}
-            <div className="pb-2" />
+      {/* Card estandarizada — Empleados */}
+      <div className="rounded-xl border bg-card">
+        {/* Encabezado */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-2">
+          <div>
+            <h3 className="text-base font-semibold text-foreground">
+              Empleados
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Directorio administrativo del personal
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <span className="size-2 rounded-full bg-green-500" />
+              Activo
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="size-2 rounded-full bg-red-500" />
+              Inactivo
+            </span>
+          </div>
         </div>
+
+        {/* Tabla */}
+        <div className="p-6 pt-6 pb-4">
+          <DataTable
+            columns={columns}
+            data={rows}
+            manualPagination
+            pageCount={Math.max(totalPages, 1)}
+            totalRows={totalElements}
+            state={{ pagination: { pageIndex: page, pageSize } }}
+            onPaginationChange={handlePaginationChange}
+            emptyMessage={
+              isLoading ? "Cargando..." : error ? error : "Sin datos"
+            }
+            searchable={false}
+          />
+        </div>
+
+        {/* Pie */}
+        <div className="flex items-center justify-between px-6 py-3 text-[0.95rem] text-muted-foreground">
+          <div>
+            Total: {totalElements}
+            <Separator
+              className="mx-3 h-4 inline-block align-middle"
+              orientation="vertical"
+            />
+            Página {page + 1} de {Math.max(totalPages, 1)}
+          </div>
+          <Button variant="ghost" size="sm" onClick={load} disabled={isLoading}>
+            {isLoading ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : null}
+            Refrescar
+          </Button>
+        </div>
+
+        {/* respiración inferior */}
+        <div className="pb-2" />
+      </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar empleado?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={submitDelete} disabled={deletePending}>
+              {deletePending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : null}
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
