@@ -15,6 +15,8 @@ const TITLE_MAP = {
     "labs": "Laboratorio",
     "centers": "Centros médicos",
     "history": "Historial",
+    "specialties": "Especialidades",
+    "employees": "Empleados",
     "starred": "Favoritos",
     "settings": "Ajustes",
     "playground": "Playground",
