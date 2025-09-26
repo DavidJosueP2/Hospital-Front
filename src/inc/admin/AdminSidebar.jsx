@@ -257,17 +257,13 @@ export default function AdminSidebar() {
                     aria-label="Cuenta"
                   >
                     <Avatar
-                      className={
-                        collapsed ? "size-7 shrink-0" : "size-8 shrink-0"
-                      }
+                      className={`flex items-center justify-center rounded-full text-white font-bold
+    ${collapsed ? "h-9 w-9 text-sm" : "h-8 w-10 text-base"} 
+    bg-gray-500`}
                     >
-                      <AvatarImage
-                        src="https://i.pravatar.cc/64?img=3"
-                        alt="@user"
-                      />
-                      <AvatarFallback>
-                        {user ? user.first_name[0] + user.last_name[0] : "U"}
-                      </AvatarFallback>
+                      {user
+                        ? `${user.first_name[0]?.toUpperCase()}${user.last_name[0]?.toUpperCase()}`
+                        : "U"}
                     </Avatar>
 
                     {!collapsed && (
@@ -292,8 +288,16 @@ export default function AdminSidebar() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
+                  onClick={() => navigate("/profile")}
+                  className="focus:bg-muted dark:focus:bg-gray-700 dark:text-gray-100"
+                >
+                  Mi perfil
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
                   onClick={handleLogout}
-                  className="text-red-600 focus:bg-red-100"
+                  className="text-red-600 focus:bg-red-500"
                 >
                   Cerrar sesión
                 </DropdownMenuItem>
