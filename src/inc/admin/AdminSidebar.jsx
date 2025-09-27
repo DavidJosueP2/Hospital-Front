@@ -1,312 +1,193 @@
-import React, { useContext } from "react";
+import React from "react";
 import {
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarSeparator,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  useSidebar,
+    Sidebar,
+    SidebarHeader,
+    SidebarContent,
+    SidebarFooter,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuButton,
+    SidebarSeparator,
+    SidebarGroup,
+    SidebarGroupLabel,
+    SidebarGroupContent,
+    useSidebar,
 } from "@/components/ui/shadcn/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/shadcn/avatar";
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/shadcn/avatar";
-import {
-  Building2,
-  Heart,
-  FolderKanban,
-  Stethoscope,
-  BookText,
-  UserRound,
-  UserCog,
-  ClipboardList,
+    Building2,
+    Heart,
+    FolderKanban,
+    Stethoscope,
+    BookText,
+    UserRound,
+    UserCog,
+    ClipboardList,
+    BarChart3,
+    FileText,
+    TrendingUp,
 } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
-import logoUrl from "@/assets/favicon.ico";
-import AuthContext from "@/context/AuthContext";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/shadcn/dropdown-menu";
-import Can from "@/utils/Can.jsx";
+import { NavLink } from "react-router-dom";
 
-function NavItem({ to, icon: Icon, label, className = "", end = false }) {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+/** Ítem reutilizable: centra ícono cuando el sidebar está colapsado */
+function NavItem({ to, icon: Icon, label, className = "" }) {
+    const { state } = useSidebar();
+    const collapsed = state === "collapsed";
 
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        asChild
-        tooltip={collapsed ? label : undefined}
-        className={`${
-          collapsed ? "justify-center px-0" : "justify-start"
-        } ${className}`}
-      >
-        <NavLink
-          to={to}
-          end={end}
-          aria-label={label}
-          className={[
-            "group",
-            collapsed
-              ? "relative w-full grid place-items-center rounded-lg px-0 py-0.5"
-              : "relative w-full flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-muted/60 text-foreground/90 aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground aria-[current=page]:ring-1 aria-[current=page]:ring-brand/20 aria-[current=page]:before:absolute aria-[current=page]:before:left-[-6px] aria-[current=page]:before:top-1/2 aria-[current=page]:before:-translate-y-1/2 aria-[current=page]:before:h-5 aria-[current=page]:before:w-[3px] aria-[current=page]:before:rounded-full aria-[current=page]:before:bg-brand",
-          ].join(" ")}
-        >
-          <span
-            className={[
-              collapsed
-                ? "grid size-7 place-content-center shrink-0 rounded-md mx-0 my-0"
-                : "grid size-7 place-content-center shrink-0 rounded-md",
-              "bg-transparent hover:bg-brand-1/25",
-              collapsed
-                ? "group-aria-[current=page]:bg-accent group-aria-[current=page]:text-accent-foreground"
-                : "aria-[current=page]:bg-brand-1/40",
-            ].join(" ")}
-          >
-            <Icon
-              className={collapsed ? "size-3.5 shrink-0" : "size-4 shrink-0"}
-            />
-          </span>
-          {!collapsed && <span className="truncate">{label}</span>}
-        </NavLink>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
+    return (
+        <SidebarMenuItem>
+            <SidebarMenuButton
+                asChild
+                tooltip={collapsed ? label : undefined}
+                className={`${collapsed ? "justify-center px-0" : "justify-start"} ${className}`}
+            >
+                <NavLink
+                    to={to}
+                    className="w-full data-[active=true]:bg-accent data-[active=true]:text-accent-foreground"
+                >
+                    <Icon className="size-4 shrink-0" />
+                    {!collapsed && <span className="truncate">{label}</span>}
+                </NavLink>
+            </SidebarMenuButton>
+        </SidebarMenuItem>
+    );
 }
 
-const NAV_ADMIN_INICIO = [{ to: "/admin", icon: Heart, label: "Dashboard" }];
-
-const NAV_ADMIN_PLATAFORMA = [
-  { to: "/playground", icon: FolderKanban, label: "Playground" },
-];
-
-const NAV_ADMIN_GESTION = [
-  { to: "/employees", icon: UserCog, label: "Empleados" },
-  { to: "/doctors", icon: Stethoscope, label: "Doctores" },
-  { to: "/specialties", icon: ClipboardList, label: "Especialidades" },
-  { to: "/centers", icon: Building2, label: "Centros médicos" },
-];
-
-const NAV_DOCTOR_GESTION = [
-  { to: "/patients", icon: UserRound, label: "Pacientes" },
-  { to: "/consultations", icon: ClipboardList, label: "Consultas médicas" },
-  { to: "/specialties-offer", icon: Stethoscope, label: "Especialidades" },
-];
-
-const NAV_DOCS = [{ to: "/docs", icon: BookText, label: "Guías & Manuales" }];
-
 export default function AdminSidebar() {
-  const { state } = useSidebar();
-  const { user, logout } = useContext(AuthContext);
-  const collapsed = state === "collapsed";
-  const navigate = useNavigate();
+    const { state } = useSidebar();
+    const collapsed = state === "collapsed";
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
+    const MENU = {
+        home: [{ to: "/admin", icon: Heart, label: "Dashboard" }],
+        platform: [{ to: "/admin/playground", icon: FolderKanban, label: "Playground" }],
+        clinic: [
+            { to: "/admin/employees", icon: UserCog, label: "Empleados" },
+            { to: "/admin/doctors", icon: Stethoscope, label: "Doctores" },
+            { to: "/admin/patients", icon: UserRound, label: "Pacientes" },
+            { to: "/admin/specialties", icon: ClipboardList, label: "Especialidades" },
+            { to: "/admin/centers", icon: Building2, label: "Centros médicos" },
+            { to: "/admin/consultations", icon: ClipboardList, label: "Consultas médicas" },
+        ],
+        reports: [
+            { to: "/admin/reports", icon: BarChart3, label: "Dashboard de Reportes" },
+            { to: "/admin/reports/analytics", icon: TrendingUp, label: "Analytics" },
+            { to: "/admin/reports/export", icon: FileText, label: "Exportar Reportes" },
+        ],
+        docs: [{ to: "/admin/docs", icon: BookText, label: "Guías & Manuales" }],
+    };
 
-  return (
-    <Sidebar
-      collapsible="icon"
-      className="sidebar-surface border-r overflow-hidden"
-    >
-      <SidebarHeader
-        className={collapsed ? "px-4 pt-3 pb-3" : "px-4 pt-6 pb-4"}
-      >
-        <NavLink
-          to="/"
-          className={[
-            "group flex items-center gap-3 rounded-md outline-none",
-            "focus-visible:ring-2 focus-visible:ring-ring",
-            collapsed ? "justify-center px-0" : "",
-          ].join(" ")}
-        >
-          <div className="relative grid size-9 shrink-0 rounded-xl overflow-hidden border border-[color-mix(in_oklab,var(--brand-1),transparent_55%)] bg-[color-mix(in_oklab,var(--brand-veil),transparent_78%)] backdrop-blur-md">
-            <img
-              src={logoUrl}
-              alt="HQ"
-              className="w-full h-full object-contain"
-            />
-            <span
-              aria-hidden
-              className="absolute inset-0 rounded-xl pointer-events-none [background:conic-gradient(from_20deg_at_50%_50%,color-mix(in_oklab,var(--brand-1),transparent_85%),color-mix(in_oklab,var(--brand-2),transparent_88%),color-mix(in_oklab,var(--brand-3),transparent_85%),color-mix(in_oklab,#8ad2ff,transparent_90%),color-mix(in_oklab,#ffd38a,transparent_90%),color-mix(in_oklab,var(--brand-2),transparent_88%))] mix-blend-screen opacity-70 [padding:1px] [-webkit-mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] [mask-composite:exclude] [-webkit-mask-composite:xor]"
-            />
-          </div>
-          {!collapsed && (
-            <div className="leading-tight">
-              <p className="text-[1.05rem] font-semibold tracking-tight">
-                H<span className="text-sm relative -top-[1px]">&</span>Q
-                Hospital
-              </p>
-              <p className="text-[0.8rem] text-muted-foreground">
-                Administración
-              </p>
-            </div>
-          )}
-        </NavLink>
-      </SidebarHeader>
-
-      <SidebarContent
-        className={collapsed ? "px-1 overflow-hidden" : "px-2 overflow-hidden"}
-      >
-        <Can allowedRoles={["ADMIN"]}>
-          <SidebarGroup>
-            <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-              Inicio
-            </SidebarGroupLabel>
-            <SidebarGroupContent className="overflow-hidden">
-              <SidebarMenu>
-                {NAV_ADMIN_INICIO.map((item) => (
-                  <NavItem key={item.to} {...item} />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarSeparator className="sidebar-divider my-2" />
-        </Can>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-            Gestión clínica
-          </SidebarGroupLabel>
-          <SidebarGroupContent className="overflow-hidden">
-            <SidebarMenu>
-              <Can allowedRoles={["ADMIN"]}>
-                {NAV_ADMIN_GESTION.map((item) => (
-                  <NavItem key={item.to} {...item} />
-                ))}
-              </Can>
-              <Can allowedRoles={["DOCTOR"]}>
-                {NAV_DOCTOR_GESTION.map((item) => (
-                  <NavItem key={item.to} {...item} />
-                ))}
-              </Can>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator className="sidebar-divider my-2" />
-
-          <Can allowedRoles={["ADMIN"]}>
-            <SidebarGroup>
-              <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-                  Plataforma
-              </SidebarGroupLabel>
-              <SidebarGroupContent className="overflow-hidden">
-                <SidebarMenu>
-                  {NAV_ADMIN_PLATAFORMA.map((item) => (
-                      <NavItem key={item.to} {...item} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          <SidebarSeparator className="sidebar-divider my-2" />
-          </Can>
-
-          <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-            Documentación
-          </SidebarGroupLabel>
-          <SidebarGroupContent className="overflow-hidden">
-            <SidebarMenu>
-              {NAV_DOCS.map((item) => (
-                <NavItem key={item.to} {...item} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter
-        className={
-          collapsed
-            ? "mt-auto border-t px-2 pt-2 pb-1"
-            : "mt-auto border-t px-3 py-3"
-        }
-      >
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={collapsed ? "Cuenta" : undefined}
-                  className={
-                    collapsed ? "justify-center px-0" : "justify-start"
-                  }
+    return (
+        <Sidebar collapsible="icon" className="border-r overflow-hidden">
+            {/* Header: centra el logo cuando está colapsado */}
+            <SidebarHeader className="px-4 py-3">
+                <NavLink
+                    to="/admin"
+                    className={`flex items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        collapsed ? "justify-center" : ""
+                    }`}
                 >
-                  <button
-                    type="button"
-                    className={
-                      collapsed
-                        ? "h-9 w-9 grid place-items-center rounded-md"
-                        : "w-full cursor-pointer"
-                    }
-                    aria-label="Cuenta"
-                  >
-                    <Avatar
-                      className={`flex items-center justify-center rounded-full text-white font-bold
-                        ${collapsed ? "h-9 w-9 text-sm" : "h-8 w-10 text-base"} 
-                        bg-gray-500`}
-                    >
-                      {user
-                        ? `${user.first_name[0]?.toUpperCase()}${user.last_name[0]?.toUpperCase()}`
-                        : "U"}
-                    </Avatar>
-
+                    <div className="grid size-8 aspect-square shrink-0 place-content-center rounded-lg bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400">
+                        <Heart className="size-4" />
+                    </div>
                     {!collapsed && (
-                      <div className="grid grow truncate text-left ml-2">
-                        <span className="truncate text-sm font-medium">
-                          {user
-                            ? `${user.first_name} ${user.last_name}`
-                            : "Usuario"}
-                        </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {user?.email ?? "sin correo"}
-                        </span>
-                      </div>
+                        <div className="leading-tight">
+                            <p className="text-base font-semibold">ClinicCare</p>
+                            <p className="text-xs text-muted-foreground">Administración</p>
+                        </div>
                     )}
-                  </button>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
+                </NavLink>
+            </SidebarHeader>
 
-              <DropdownMenuContent align="end" side="top" className="w-48">
-                <DropdownMenuItem disabled>
-                  {user ? `${user.first_name} ${user.last_name}` : "Usuario"}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => navigate("/profile")}
-                  className="focus:bg-muted dark:focus:bg-gray-700 dark:text-gray-100"
-                >
-                  Mi perfil
-                </DropdownMenuItem>
+            {/* Contenido */}
+            <SidebarContent className="px-2 overflow-hidden">
+                <SidebarGroup>
+                    <SidebarGroupLabel>Inicio</SidebarGroupLabel>
+                    <SidebarGroupContent className="overflow-hidden">
+                        <SidebarMenu>
+                            {MENU.home.map((it) => (
+                                <NavItem key={it.to} {...it} />
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
 
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="text-red-600 focus:bg-red-500"
-                >
-                  Cerrar sesión
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
-  );
+                <SidebarSeparator />
+
+                <SidebarGroup>
+                    <SidebarGroupLabel>Plataforma</SidebarGroupLabel>
+                    <SidebarGroupContent className="overflow-hidden">
+                        <SidebarMenu>
+                            {MENU.platform.map((it) => (
+                                <NavItem key={it.to} {...it} />
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                <SidebarSeparator />
+
+                <SidebarGroup>
+                    <SidebarGroupLabel>Gestión clínica</SidebarGroupLabel>
+                    <SidebarGroupContent className="overflow-hidden">
+                        <SidebarMenu>
+                            {MENU.clinic.map((it) => (
+                                <NavItem key={it.to} {...it} />
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                <SidebarSeparator />
+
+                <SidebarGroup>
+                    <SidebarGroupLabel>Reportes & Analytics</SidebarGroupLabel>
+                    <SidebarGroupContent className="overflow-hidden">
+                        <SidebarMenu>
+                            {MENU.reports.map((it) => (
+                                <NavItem key={it.to} {...it} />
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                <SidebarSeparator />
+
+                <SidebarGroup>
+                    <SidebarGroupLabel>Documentación</SidebarGroupLabel>
+                    <SidebarGroupContent className="overflow-hidden">
+                        <SidebarMenu>
+                            {MENU.docs.map((it) => (
+                                <NavItem key={it.to} {...it} />
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
+
+            {/* Footer: centra el avatar cuando está colapsado */}
+            <SidebarFooter className="border-t px-3 py-3">
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            className={collapsed ? "justify-center px-0" : "justify-start"}
+                        >
+                            <button type="button" className="w-full cursor-default" tabIndex={-1}>
+                                <Avatar className="size-8 shrink-0">
+                                    <AvatarImage src="https://i.pravatar.cc/64?img=3" alt="@shadcn" />
+                                    <AvatarFallback>SC</AvatarFallback>
+                                </Avatar>
+                                {!collapsed && (
+                                    <div className="grid grow truncate text-left">
+                                        <span className="truncate text-sm font-medium">shadcn</span>
+                                        <span className="truncate text-xs text-muted-foreground">m@example.com</span>
+                                    </div>
+                                )}
+                            </button>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>
+    );
 }
