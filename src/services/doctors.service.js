@@ -26,8 +26,13 @@ export const listDoctors = async ({ includeDeleted = false, page = 0, size = 10,
 };
 
 export const listAllDoctors = async ({ includeDeleted = false } = {}) => {
-    const res = await api.get("/admin/doctors/all", { params: { includeDeleted } });
-    return toCamel(res.data);
+    try {
+        const res = await api.get("/admin/doctors/all", { params: { includeDeleted } });
+        return toCamel(res.data);
+    } catch (error) {
+        console.error('Error fetching all doctors:', error);
+        return [];
+    }
 };
 
 export const getDoctor = async (id, { includeDeleted = false } = {}) => {
