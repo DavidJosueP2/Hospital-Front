@@ -62,7 +62,18 @@ const ReportTable = ({ reportData, filters }) => {
       
       // Para reportes por médico
       if (filters.reportType === 'doctor') {
-        // Formato esperado: con topActiveDoctors
+        // Formato esperado: doctorStatistics
+        if (firstReport.doctorStatistics) {
+          return {
+            headers: ['Médico', 'Consultas Totales', 'Pacientes Únicos'],
+            rows: firstReport.doctorStatistics.map(item => [
+              item.doctorName || (item.doctorId != null ? `Doctor ID: ${item.doctorId}` : 'N/A'),
+              item.totalConsultations || 0,
+              item.uniquePatients || 0
+            ])
+          };
+        }
+        // Fallback: ranking de doctores activos
         if (firstReport.topActiveDoctors) {
           return {
             headers: ['Médico', 'Consultas Totales', 'Pacientes Únicos'],
@@ -99,7 +110,19 @@ const ReportTable = ({ reportData, filters }) => {
       
       // Para centros médicos
       if (filters.reportType === 'medical-center') {
-        // Formato esperado: con medicalCenterStatistics
+        // Formato esperado: centerStatistics
+        if (firstReport.centerStatistics) {
+          return {
+            headers: ['Centro Médico', 'Consultas Totales', 'Pacientes Únicos', 'Médicos Activos'],
+            rows: firstReport.centerStatistics.map(item => [
+              item.centerName || 'N/A',
+              item.totalConsultations || 0,
+              item.uniquePatients || 0,
+              item.activeDoctors || item.uniqueDoctors || 0
+            ])
+          };
+        } 
+        // Fallback: nombre alternativo
         if (firstReport.medicalCenterStatistics) {
           return {
             headers: ['Centro Médico', 'Consultas Totales', 'Pacientes Únicos', 'Médicos Activos'],
@@ -107,10 +130,10 @@ const ReportTable = ({ reportData, filters }) => {
               item.centerName || 'N/A',
               item.totalConsultations || 0,
               item.uniquePatients || 0,
-              item.activeDoctors || 0
+              item.activeDoctors || item.uniqueDoctors || 0
             ])
           };
-        } 
+        }
         // Formato alternativo: objeto con datos directamente
         else if (firstReport.centerName || firstReport.medicalCenterId) {
           return {
@@ -119,7 +142,7 @@ const ReportTable = ({ reportData, filters }) => {
               firstReport.centerName || `Centro ID: ${firstReport.medicalCenterId}` || 'N/A',
               firstReport.totalConsultations || 0,
               firstReport.uniquePatients || 0,
-              firstReport.activeDoctors || 0
+              firstReport.activeDoctors || firstReport.uniqueDoctors || 0
             ]]
           };
         }
@@ -131,7 +154,7 @@ const ReportTable = ({ reportData, filters }) => {
               item.centerName || `Centro ID: ${item.medicalCenterId}` || 'N/A',
               item.totalConsultations || 0,
               item.uniquePatients || 0,
-              item.activeDoctors || 0
+              item.activeDoctors || item.uniqueDoctors || 0
             ])
           };
         }

@@ -1,149 +1,101 @@
-import React, { useState } from 'react';
+// ReportsDashboard.jsx
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/shadcn/tabs";
-import { BarChart3, PieChart as PieChartIcon, Table } from "lucide-react";
+import { BarChart3, Table } from "lucide-react";
 import reportsService from "../../services/reports.service";
 import { toast } from "sonner";
 
-// Subcomponentes
-import ReportHeader from './reports/ReportHeader';
-import ReportFilters from './reports/ReportFilters';
-import ReportCharts from './reports/ReportCharts';
-import ReportTable from './reports/ReportTable';
+import ReportHeader from "./reports/ReportHeader";
+import ReportCharts from "./reports/ReportCharts";
+import ReportTable from "./reports/ReportTable";
 
 const ReportsDashboard = () => {
   const [reportData, setReportData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('charts');
-  
-  const [filters, setFilters] = useState({
-    reportType: 'specialty',
-    specialty: '',  
-    doctor: '',    
-    medicalCenter: '', 
-    startDate: '',
-    endDate: '',
-    exportFormat: 'PDF'
-  });
+  const [activeTab, setActiveTab] = useState("charts");
 
-  const handleFilterChange = (key, value) => {
-    // Actualizar el estado de los filtros
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-    
-    // Cuando cambia el tipo de reporte, resetear el reporte actual
-    if (key === 'reportType') {
-      setReportData(null);
-    }
+  // No interactive filters UI: the page performs a single automatic specialty report on mount.
+  const [filters] = useState({ reportType: "specialty" });
+
+  // Helper: sleep
+  const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+  // Helper: timeout wrapper for a promise
+  const withTimeout = (promise, ms) => {
+    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms));
+    return Promise.race([promise, timeout]);
   };
 
-  const generateReport = async () => {
-    // No generar reporte si ya está cargando
-    if (isLoading) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Generando reporte con filtros:', filters);
-      
-      let response;
-      // Parámetros base que aplican a todos los tipos de reportes
-      const reportParams = {
-        startDate: filters.startDate || null,
-        endDate: filters.endDate || null
+  // Auto-fetch the specialty report on mount with retry/backoff (max 5 attempts)
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchStaticReport = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      const payload = {
+        fechaInicio: null,
+        fechaFin: null,
+        centrosMedicos: [],
+        especialidades: [1],
+        medicos: [],
+        estado: null,
+        ordenarPor: null,
+        direccionOrden: null,
+        pagina: 0,
+        tamanio: 50,
       };
 
-      // Procesar según tipo de reporte
-      switch (filters.reportType) {
-        case 'specialty':
-          reportParams.specialtyId = filters.specialty ? parseInt(filters.specialty) : null;
-          if (!reportParams.specialtyId) {
-            throw new Error('Debe seleccionar una especialidad');
-          }
-          console.log('Enviando parámetros al backend para reporte de especialidad:', reportParams);
-          response = await reportsService.getConsultationsBySpecialty(reportParams);
-          break;
-          
-        case 'doctor':
-          reportParams.doctorId = filters.doctor ? parseInt(filters.doctor) : null;
-          if (!reportParams.doctorId) {
-            throw new Error('Debe seleccionar un médico');
-          }
-          console.log('Enviando parámetros al backend para reporte de médico:', reportParams);
-          response = await reportsService.getConsultationsByDoctor(reportParams);
-          break;
-          
-        case 'medical-center':
-          reportParams.medicalCenterId = filters.medicalCenter ? parseInt(filters.medicalCenter) : null;
-          if (!reportParams.medicalCenterId) {
-            throw new Error('Debe seleccionar un centro médico');
-          }
-          console.log('Enviando parámetros al backend para reporte de centro médico:', reportParams);
-          response = await reportsService.getConsultationsByMedicalCenter(reportParams);
-          break;
-          
-        case 'monthly':
-          console.log('Enviando parámetros al backend para reporte mensual:', reportParams);
-          response = await reportsService.getConsultationsByMonth(reportParams);
-          break;
-        
-        default:
-          throw new Error('Tipo de reporte no válido');
-      }
-      // Asegurar que response sea un array y procesarlo según el tipo de reporte
-      if (!response) {
-        throw new Error('No se recibieron datos del servidor');
-      }
-      
-      let processedData;
-      
-      // Procesar la respuesta según el tipo de reporte y la estructura esperada
-      switch (filters.reportType) {
-        case 'doctor':
-          // Para reporte de médicos, la respuesta viene como un Map (doctor-performance-ranking)
-          console.log('Datos de reporte de médicos recibidos:', response);
-          if (!Array.isArray(response)) {
-            // Si es un único objeto con estructura específica para doctores
-            processedData = [response]; // Mantener la estructura específica 
+      const maxAttempts = 5;
+      const baseTimeoutMs = 20000; // 20s base timeout
+
+      for (let attempt = 1; attempt <= maxAttempts && !cancelled; attempt++) {
+        try {
+          console.log(`Fetching static specialty report attempt ${attempt}...`);
+          const timeoutForAttempt = baseTimeoutMs * attempt; // increase per attempt
+          const response = await withTimeout(reportsService.getConsultationsBySpecialty(payload), timeoutForAttempt);
+
+          if (cancelled) return;
+
+          const processedData = Array.isArray(response) ? response : [response];
+
+          if (!processedData.length) {
+            toast.info("No se encontraron datos para el reporte estático");
+            setReportData([]);
           } else {
-            processedData = response;
+            toast.success("Reporte cargado correctamente");
+            setReportData(processedData);
+            setActiveTab("charts");
           }
-          break;
-          
-        case 'specialty':
-        case 'medical-center':
-        case 'monthly':
-        default:
-          // Para los demás reportes, aseguramos que sea un array
-          processedData = Array.isArray(response) ? response : [response];
-          break;
+
+          setIsLoading(false);
+          return; // success
+        } catch (err) {
+          console.warn(`Static report attempt ${attempt} failed:`, err.message || err);
+          if (attempt < maxAttempts && !cancelled) {
+            const backoff = 2000 * attempt; // 2s, 4s, 6s...
+            console.log(`Waiting ${backoff}ms before retrying...`);
+            await sleep(backoff);
+            continue;
+          }
+
+          if (!cancelled) {
+            setError(err.message || "Error al cargar reporte estático");
+            toast.error(err.message || "Error al cargar reporte estático");
+            setReportData(null);
+            setIsLoading(false);
+          }
+          return;
+        }
       }
-      
-      console.log('Datos procesados para visualización:', processedData);
-      
-      if (processedData.length === 0) {
-        toast.info('No se encontraron datos para los filtros seleccionados');
-        setReportData([]);  // Establecer array vacío para mostrar mensaje apropiado
-      } else {
-        toast.success('Reporte generado exitosamente');
-        setReportData(processedData);
-        
-        // Cambiar a la pestaña de gráficos por defecto cuando se genera un nuevo reporte
-        setActiveTab('charts');
-      }
-      
-    } catch (error) {
-      console.error('Error generando reporte:', error);
-      setError(error.message || 'Error al generar el reporte');
-      toast.error(error.message || 'Error al generar el reporte');
-      setReportData(null);  // Resetear datos cuando hay error
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    fetchStaticReport();
+
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -158,63 +110,45 @@ const ReportsDashboard = () => {
         </div>
       </div>
 
-      {/* Header con estadísticas principales */}
       <ReportHeader reportData={reportData} />
 
-      {/* Filtros de configuración */}
-      <ReportFilters 
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onGenerateReport={generateReport}
-        isLoading={isLoading}
-        reportData={reportData}
-      />
-
-      {/* Mostrar error si existe */}
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
           <div className="text-red-800 dark:text-red-200 font-medium">
             Error al generar el reporte
           </div>
-          <div className="text-red-600 dark:text-red-300 text-sm mt-1">
-            {error}
-          </div>
+          <div className="text-red-600 dark:text-red-300 text-sm mt-1">{error}</div>
         </div>
       )}
 
-      {/* Contenido del reporte */}
       {reportData && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="charts" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Gráficos
+              <BarChart3 className="h-4 w-4" /> Gráficos
             </TabsTrigger>
             <TabsTrigger value="table" className="flex items-center gap-2">
-              <Table className="h-4 w-4" />
-              Tablas
+              <Table className="h-4 w-4" /> Tablas
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="charts" className="space-y-6">
             <ReportCharts reportData={reportData} filters={filters} />
           </TabsContent>
-
           <TabsContent value="table" className="space-y-6">
             <ReportTable reportData={reportData} filters={filters} />
           </TabsContent>
         </Tabs>
       )}
 
-      {/* Mensaje cuando no hay datos */}
-      {(!reportData || (Array.isArray(reportData) && reportData.length === 0)) && !isLoading && (
+      {(!reportData || !reportData.length) && !isLoading && (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 shadow">
           <div className="text-gray-500 dark:text-gray-400">
             <BarChart3 className="mx-auto h-12 w-12 mb-4 opacity-50" />
             <p className="text-lg font-medium">No hay datos para mostrar</p>
             <p className="text-sm">
-              {reportData && reportData.length === 0 
-                ? "No se encontraron resultados para los filtros aplicados." 
+              {reportData && reportData.length === 0
+                ? "No se encontraron resultados para los filtros aplicados."
                 : "Configure los filtros y genere un reporte para ver los resultados."}
             </p>
           </div>

@@ -70,7 +70,6 @@ export default function AdminSidebar() {
         ],
         reports: [
             { to: "/admin/reports", icon: BarChart3, label: "Dashboard de Reportes" },
-            { to: "/admin/reports/analytics", icon: TrendingUp, label: "Analytics" },
             { to: "/admin/reports/export", icon: FileText, label: "Exportar Reportes" },
         ],
         docs: [{ to: "/admin/docs", icon: BookText, label: "Guías & Manuales" }],

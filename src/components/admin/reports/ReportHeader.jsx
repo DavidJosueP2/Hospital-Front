@@ -22,6 +22,15 @@ const ReportHeader = ({ reportData }) => {
       totalConsultations = firstReport.specialtyStatistics.reduce((sum, item) => sum + (item.totalConsultations || 0), 0);
       totalSpecialties = firstReport.specialtyStatistics.length;
       totalDoctors = firstReport.specialtyStatistics.reduce((sum, item) => sum + (item.uniqueDoctors || 0), 0);
+    } else if (firstReport.doctorStatistics) {
+      totalConsultations = firstReport.doctorStatistics.reduce((sum, item) => sum + (item.totalConsultations || 0), 0);
+      totalDoctors = firstReport.doctorStatistics.length;
+      const uniqueSpecialties = new Set(firstReport.doctorStatistics.map(item => item.specialty).filter(Boolean));
+      totalSpecialties = uniqueSpecialties.size;
+    } else if (firstReport.centerStatistics) {
+      totalConsultations = firstReport.centerStatistics.reduce((sum, item) => sum + (item.totalConsultations || 0), 0);
+      totalSpecialties = firstReport.kpis?.distinctSpecialties || 0;
+      totalDoctors = firstReport.centerStatistics.reduce((sum, item) => sum + (item.uniqueDoctors || item.activeDoctors || 0), 0);
     } else if (firstReport.topActiveDoctors) {
       totalConsultations = firstReport.topActiveDoctors.reduce((sum, item) => sum + (item.totalConsultations || 0), 0);
       totalDoctors = firstReport.topActiveDoctors.length;
@@ -29,9 +38,9 @@ const ReportHeader = ({ reportData }) => {
       const uniqueSpecialties = new Set(firstReport.topActiveDoctors.map(item => item.specialty).filter(Boolean));
       totalSpecialties = uniqueSpecialties.size;
     } else if (firstReport.kpis) {
-      totalConsultations = firstReport.kpis.totalConsultations || 0;
-      totalSpecialties = firstReport.kpis.totalSpecialties || 0;
-      totalDoctors = firstReport.kpis.totalDoctors || 0;
+      totalConsultations = firstReport.kpis.totalConsultations || firstReport.executiveSummary?.totalConsultations || 0;
+      totalSpecialties = firstReport.kpis.distinctSpecialties || firstReport.kpis.totalSpecialties || 0;
+      totalDoctors = firstReport.kpis.doctorsInvolved || firstReport.kpis.totalDoctors || 0;
     }
 
     return {
