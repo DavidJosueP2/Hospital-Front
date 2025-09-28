@@ -22,7 +22,6 @@ import AuthLayout from "@/layouts/AuthLayout.jsx";
 import SpecialtiesOfferPage from "@/pages/specialty/SpecialtiesOfferPage.jsx";
 import ProfilePage from "@/pages/profile/ProfilePage";
 import ReportsDashboard from "@/components/admin/ReportsDashboard.jsx";
-import ReportsAnalytics from "@/pages/admin/ReportsAnalytics.jsx";
 import ReportsExport from "@/pages/admin/ReportsExport.jsx";
 
 function RoleBasedHome() {
@@ -62,7 +61,6 @@ export default function App() {
                 <Route path="/admin/specialties" element={<SpecialtiesPage />} />
                 <Route path="/admin/doctors" element={<DoctorsPage />} />
                 <Route path="/admin/reports" element={<ReportsDashboard />} />
-                <Route path="/admin/reports/analytics" element={<ReportsAnalytics />} />
                 <Route path="/admin/reports/export" element={<ReportsExport />} />
               </Route>
 
