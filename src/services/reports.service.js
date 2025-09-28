@@ -1,5 +1,6 @@
 import api from './api';
 import { REPORT_TYPES, EXPORT_FORMATS } from '@/types/report-types';
+import { generateSpecialtyPDF, generateDoctorPDF, generateMedicalCenterPDF, generateMonthlyPDF } from '@/utils/pdfGenerator';
 
 const REPORTS_BASE_URL = '/api/reports';
 
@@ -13,9 +14,8 @@ const JSON_HEADERS = {
 const REPORT_ENDPOINTS = {
   [REPORT_TYPES.SPECIALTY]: `${REPORTS_BASE_URL}/consultation/specialty`,
   [REPORT_TYPES.DOCTOR]: `${REPORTS_BASE_URL}/consultation/doctor`,
-  [REPORT_TYPES.MEDICAL_CENTER]: `${REPORTS_BASE_URL}/consultation/medical-center`,
-  [REPORT_TYPES.MONTHLY]: `${REPORTS_BASE_URL}/consultation/monthly`,
-  [REPORT_TYPES.DETAILED]: `${REPORTS_BASE_URL}/consultation/detailed`
+  [REPORT_TYPES.MEDICAL_CENTER]: `${REPORTS_BASE_URL}/consultation/center`,
+  [REPORT_TYPES.MONTHLY]: `${REPORTS_BASE_URL}/consultation/monthly`
 };
 
 // Generador de nombres de archivo
@@ -27,201 +27,213 @@ const generateFilename = (reportType, format, timestamp = new Date()) => {
     [REPORT_TYPES.SPECIALTY]: 'especialidades',
     [REPORT_TYPES.DOCTOR]: 'medicos',
     [REPORT_TYPES.MEDICAL_CENTER]: 'centros-medicos',
-    [REPORT_TYPES.MONTHLY]: 'mensual',
-    [REPORT_TYPES.DETAILED]: 'detallado'
+    [REPORT_TYPES.MONTHLY]: 'mensual'
   };
   
   return `reporte-${typeNames[reportType]}-${dateStr}_${timeStr}.${format}`;
 };
 
-// Servicio unificado de reportes
-export const reportsService = {
-  /**
-   * Obtener datos de reporte en formato JSON
-   */
-  getReportData: async (reportType, filters = {}) => {
-    const endpoint = REPORT_ENDPOINTS[reportType];
-    
-    if (!endpoint) {
-      throw new Error(`Tipo de reporte no válido: ${reportType}`);
-    }
+// Normaliza distintos nombres de campos provenientes del UI a los esperados por el backend
+const toIntArray = (value) => {
+  if (value == null) return [];
+  const arr = Array.isArray(value) ? value : [value];
+  return Array.from(new Set(arr
+    .map(v => parseInt(v))
+    .filter(v => !Number.isNaN(v))));
+};
 
-    const response = await api.post(endpoint, filters, {
+// Convertir los filtros del UI a DTO del backend (claves en español y arrays)
+const prepareFilters = (filters = {}) => {
+  // Fechas
+  const fechaInicio = filters.fechaInicio || filters.startDate || null;
+  const fechaFin = filters.fechaFin || filters.endDate || null;
+
+  // Colecciones (IDs en arrays)
+  const medicos = filters.medicos
+    ? toIntArray(filters.medicos)
+    : (filters.doctors ? toIntArray(filters.doctors)
+      : (filters.doctorId != null ? toIntArray([filters.doctorId])
+        : (filters.doctor != null ? toIntArray([filters.doctor]) : [])));
+
+  const especialidades = filters.especialidades
+    ? toIntArray(filters.especialidades)
+    : (filters.specialties ? toIntArray(filters.specialties)
+      : (filters.specialtyId != null ? toIntArray([filters.specialtyId])
+        : (filters.specialty != null ? toIntArray([filters.specialty]) : [])));
+
+  const centrosMedicos = filters.centrosMedicos
+    ? toIntArray(filters.centrosMedicos)
+    : (filters.medicalCenters ? toIntArray(filters.medicalCenters)
+      : (filters.medicalCenterId != null ? toIntArray([filters.medicalCenterId])
+        : (filters.medicalCenter != null ? toIntArray([filters.medicalCenter]) : [])));
+
+  // Orden/paginación/estado (con valores por defecto seguros)
+  const estado = filters.estado || filters.status || null;
+  const ordenarPor = filters.ordenarPor || filters.orderBy || null;
+  const direccionOrden = filters.direccionOrden || filters.sortDirection || filters.direccion || null;
+  const pagina = (filters.pagina ?? filters.page ?? 0);
+  const tamanio = (filters.tamanio ?? filters.pageSize ?? 20);
+
+  return {
+    fechaInicio,
+    fechaFin,
+    centrosMedicos,
+    especialidades,
+    medicos,
+    estado,
+    ordenarPor,
+    direccionOrden,
+    pagina,
+    tamanio
+  };
+};
+
+// Servicio de reportes
+const reportsService = {
+  /**
+   * Obtiene un reporte por especialidad
+   */
+  getConsultationsBySpecialty: async (filters) => {
+    const preparedFilters = prepareFilters(filters);
+    const response = await api.post(REPORT_ENDPOINTS[REPORT_TYPES.SPECIALTY], preparedFilters, {
       headers: JSON_HEADERS
     });
-    
     return response.data;
   },
 
   /**
-   * Generar y descargar reporte en diferentes formatos
+   * Obtiene un reporte por médico
    */
-  generateReport: async (reportType, filters = {}, format = EXPORT_FORMATS.PDF) => {
-    // Primero obtenemos los datos
-    const data = await reportsService.getReportData(reportType, filters);
-    
-    // Determinamos el endpoint y configuraciones según el formato
-    let endpoint, options;
-    
-    switch (format) {
-      case EXPORT_FORMATS.PDF:
-      case EXPORT_FORMATS.EXCEL:
-      case EXPORT_FORMATS.CSV:
-        endpoint = `${REPORTS_BASE_URL}/export/${format}`;
-        options = {
-          responseType: 'blob',
-          headers: {
-            ...JSON_HEADERS,
-            'X-Report-Type': reportType
-          }
-        };
+  getConsultationsByDoctor: async (filters) => {
+    const preparedFilters = prepareFilters(filters);
+    const response = await api.post(REPORT_ENDPOINTS[REPORT_TYPES.DOCTOR], preparedFilters, {
+      headers: JSON_HEADERS
+    });
+    return response.data;
+  },
+
+  /**
+   * Obtiene un reporte por centro médico
+   */
+  getConsultationsByMedicalCenter: async (filters) => {
+    const preparedFilters = prepareFilters(filters);
+    const response = await api.post(REPORT_ENDPOINTS[REPORT_TYPES.MEDICAL_CENTER], preparedFilters, {
+      headers: JSON_HEADERS
+    });
+    return response.data;
+  },
+
+  /**
+   * Obtiene un reporte mensual
+   */
+  getConsultationsByMonth: async (filters) => {
+    const preparedFilters = prepareFilters(filters);
+    const response = await api.post(REPORT_ENDPOINTS[REPORT_TYPES.MONTHLY], preparedFilters, {
+      headers: JSON_HEADERS
+    });
+    return response.data;
+  },
+
+  /**
+   * Genera un PDF para el reporte especificado
+   */
+  generatePDF: async (reportType, reportData, filters) => {
+    if (!reportData) {
+      throw new Error('No hay datos para generar el reporte');
+    }
+
+    let pdfBlob;
+
+    switch (reportType) {
+      case REPORT_TYPES.SPECIALTY:
+        pdfBlob = await generateSpecialtyPDF(reportData, filters);
         break;
-        
-      case EXPORT_FORMATS.JSON:
-        // Para JSON, simplemente devolvemos los datos
-        return {
-          data,
-          filename: generateFilename(reportType, 'json'),
-          format: EXPORT_FORMATS.JSON
-        };
-        
+      case REPORT_TYPES.DOCTOR:
+        pdfBlob = await generateDoctorPDF(reportData, filters);
+        break;
+      case REPORT_TYPES.MEDICAL_CENTER:
+        pdfBlob = await generateMedicalCenterPDF(reportData, filters);
+        break;
+      case REPORT_TYPES.MONTHLY:
+        pdfBlob = await generateMonthlyPDF(reportData, filters);
+        break;
       default:
-        throw new Error(`Formato no soportado: ${format}`);
+        throw new Error(`Tipo de reporte no soportado para PDF: ${reportType}`);
     }
     
-    // Para formatos binarios, hacemos la petición al endpoint de exportación
-    const response = await api.post(endpoint, { 
-      reportType, 
-      filters, 
-      data 
-    }, options);
-    
-    return {
-      blob: response.data,
-      filename: generateFilename(reportType, format),
-      format
-    };
-  },
+    const filename = generateFilename(reportType, 'pdf');
 
-  /**
-   * Métodos específicos por compatibilidad (pueden ser deprecados luego)
-   */
-  /**
-   * Métodos específicos por compatibilidad, con transformación de parámetros
-   * para asegurar compatibilidad con la API del backend
-   */
-  getConsultationsBySpecialty: (filters) => {
-    // Mapear los parámetros al formato esperado por el backend
-    const backendFilters = {
-      fechaInicio: filters.startDate ? new Date(filters.startDate) : null,
-      fechaFin: filters.endDate ? new Date(filters.endDate) : null,
-      specialtyId: filters.specialtyId,
-      // Si hay más parámetros, agregarlos aquí
-    };
-    
-    return reportsService.getReportData(REPORT_TYPES.SPECIALTY, backendFilters);
-  },
-    
-  getConsultationsByDoctor: (filters) => {
-    // Mapear los parámetros al formato esperado por el backend
-    const backendFilters = {
-      fechaInicio: filters.startDate ? new Date(filters.startDate) : null,
-      fechaFin: filters.endDate ? new Date(filters.endDate) : null,
-      doctorId: filters.doctorId,
-      // Si hay más parámetros, agregarlos aquí
-    };
-    
-    return reportsService.getReportData(REPORT_TYPES.DOCTOR, backendFilters);
-  },
-    
-  getConsultationsByMedicalCenter: (filters) => {
-    // Mapear los parámetros al formato esperado por el backend
-    const backendFilters = {
-      fechaInicio: filters.startDate ? new Date(filters.startDate) : null,
-      fechaFin: filters.endDate ? new Date(filters.endDate) : null,
-      medicalCenterId: filters.medicalCenterId,
-      // Si hay más parámetros, agregarlos aquí
-    };
-    
-    return reportsService.getReportData(REPORT_TYPES.MEDICAL_CENTER, backendFilters);
-  },
-    
-  getConsultationsByMonth: (filters) => {
-    // Mapear los parámetros al formato esperado por el backend
-    const backendFilters = {
-      fechaInicio: filters.startDate ? new Date(filters.startDate) : null,
-      fechaFin: filters.endDate ? new Date(filters.endDate) : null,
-      // Si hay más parámetros, agregarlos aquí
-    };
-    
-    return reportsService.getReportData(REPORT_TYPES.MONTHLY, backendFilters);
-  },
-
-  /**
-   * Utilidades para descarga de archivos
-   */
-  downloadFile: (blob, filename) => {
-    const url = window.URL.createObjectURL(blob);
+    // Crea un enlace temporal y lo usa para descargar el archivo
+    const url = URL.createObjectURL(pdfBlob);
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
-    link.style.display = 'none';
-    
+    document.body.appendChild(link);
+    link.click();
+
+    // Limpieza
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+
+    return {
+      success: true,
+      filename
+    };
+  },
+
+  /**
+   * Exporta el reporte en un formato específico
+   */
+  exportReport: async (reportType, reportData, filters, format = EXPORT_FORMATS.PDF) => {
+    if (format === EXPORT_FORMATS.PDF) {
+      return await reportsService.generatePDF(reportType, reportData, filters);
+    }
+
+    // Para otros formatos, implementar lógica de exportación o llamar al backend
+    throw new Error(`Formato de exportación no implementado: ${format}`);
+  }
+,
+
+  /**
+   * Llama al backend para generar el reporte (binary) y fuerza la descarga.
+   * Expects a ReportRequest-like object: { reportType, exportFormat, filterId, startDate, endDate, month }
+   */
+  generateReport: async (reportRequest) => {
+    // Map and sanitize request keys
+    const payload = { ...reportRequest };
+
+    // Request the binary from backend
+    const response = await api.post(`${REPORTS_BASE_URL}/generate`, payload, {
+      headers: { 'Content-Type': 'application/json' },
+      responseType: 'arraybuffer'
+    });
+
+    // Try to get filename from Content-Disposition
+    const disposition = response.headers && response.headers['content-disposition'];
+    let filename = 'report';
+    if (disposition) {
+      const match = /filename\*=UTF-8''([^;]+)|filename="?([^\";]+)"?/.exec(disposition);
+      if (match) {
+        filename = decodeURIComponent(match[1] || match[2]);
+      }
+    } else {
+      // fallback build name
+      filename = `report-${(new Date()).toISOString().slice(0,19).replace(/[:T]/g,'_')}.${(payload.exportFormat||'pdf').toLowerCase()}`;
+    }
+
+    const blob = new Blob([response.data], { type: response.headers['content-type'] || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    // Limpieza de memoria
-    setTimeout(() => window.URL.revokeObjectURL(url), 100);
-  },
+    URL.revokeObjectURL(url);
 
-  /**
-   * Previsualizar archivo en nueva pestaña (para PDFs)
-   */
-  previewFile: (blob, filename) => {
-    const url = window.URL.createObjectURL(blob);
-    const newWindow = window.open(url, '_blank');
-    
-    // Fallback si el popup es bloqueado
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      reportsService.downloadFile(blob, filename);
-    }
-  },
-
-  /**
-   * Obtener estadísticas rápidas del reporte
-   */
-  getReportStats: async (reportType, filters = {}) => {
-    const data = await reportsService.getReportData(reportType, filters);
-    
-    const statsGenerators = {
-      [REPORT_TYPES.SPECIALTY]: (data) => ({
-        totalEspecialidades: data.length,
-        totalConsultas: data.reduce((sum, item) => sum + (item.totalConsultations || 0), 0),
-        especialidadMasActiva: data.reduce((max, item) => 
-          (item.totalConsultations || 0) > (max.totalConsultations || 0) ? item : max, data[0]
-        )?.specialtyName || 'N/A'
-      }),
-      
-      [REPORT_TYPES.DOCTOR]: (data) => ({
-        totalMedicos: data.length,
-        totalConsultas: data.reduce((sum, item) => sum + (item.totalConsultations || 0), 0),
-        promedioConsultas: data.length > 0 ? 
-          (data.reduce((sum, item) => sum + (item.totalConsultations || 0), 0) / data.length).toFixed(1) : 0
-      }),
-      
-      [REPORT_TYPES.MEDICAL_CENTER]: (data) => ({
-        totalCentros: data.length,
-        totalConsultas: data.reduce((sum, item) => sum + (item.totalConsultations || 0), 0),
-        centrosConMasActividad: data.slice(0, 3).map(center => ({
-          nombre: center.centerName,
-          consultas: center.totalConsultations
-        }))
-      })
-    };
-    
-    const generator = statsGenerators[reportType];
-    return generator ? generator(data) : null;
+    return { success: true, filename };
   }
 };
 
