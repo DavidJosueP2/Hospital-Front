@@ -1,190 +1,236 @@
-// pdf/generators/specialty.js
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { PDF_STYLES } from '../styles.js';
-import { PDFUtils } from '../utils.js';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { PDFUtils } from './utils';
+import { PDF_STYLES } from './styles';
 
-export function generateSpecialtyReport(data, filters = {}) {
+/**
+ * Genera un PDF para el reporte de especialidades
+ * @param {Object} reportData Datos del reporte de especialidad
+ * @param {Object} filters Filtros aplicados
+ * @returns {Blob} PDF generado
+ */
+export const generateSpecialtyPDF = async (reportData, filters) => {
   const doc = new jsPDF();
-  const firstReport = data?.[0];
-  if (!firstReport) {
-    throw new Error('No hay datos disponibles para generar el reporte');
-  }
+  const { margin, header } = PDF_STYLES.spacing;
+  let currentY = header + 10;
 
-  const {
-    specialtyStatistics = [],
-    topActiveDoctors = [],
-    weeklyDistribution = {},
-    kpis = {},
-    executiveSummary = {}
-  } = firstReport;
+  // Añadir encabezado y título
+  PDFUtils.addHeader(doc, 'Reporte de Especialidades Médicas', 'Análisis de consultas por especialidad');
 
-  PDFUtils.addHeader(doc, 'Medical Analytics & Reporting Division', 'CONSULTATIONS BY SPECIALTY');
-
-  let yPosition = PDF_STYLES.spacing.header + 15;
-  yPosition = PDFUtils.addReportInfo(doc, filters, yPosition);
+  // Información del reporte y filtros
+  currentY = PDFUtils.addReportInfo(doc, filters, currentY);
+  currentY += 10;
 
   // Resumen ejecutivo
-  const summaryMetrics = [
-    { label: 'Total Consultations', value: executiveSummary.totalConsultations?.toLocaleString() || '0' },
-    { label: 'Doctors Involved', value: kpis.doctorsInvolved?.toLocaleString() || '0' },
-    { label: 'Distinct Specialties', value: kpis.distinctSpecialties?.toLocaleString() || '0' },
-    { label: 'Medical Centers Involved', value: kpis.medicalCentersInvolved?.toLocaleString() || '0' },
-    { label: 'Avg. per Doctor', value: kpis.avgConsultationsPerDoctor?.toFixed(1) || '0.0' },
-    { label: 'Data Completeness', value: kpis.dataQuality?.dataCompletenessPercentage ? kpis.dataQuality.dataCompletenessPercentage.toFixed(1) + '%' : '0%' },
-  ];
-
-  yPosition = PDFUtils.addExecutiveSummary(doc, summaryMetrics, yPosition);
-
-  // Tabla de especialidades
-  if (specialtyStatistics.length > 0) {
-    doc.setFontSize(PDF_STYLES.fonts.section.size);
-    doc.setFont('helvetica', 'bold');
+  if (reportData.executiveSummary) {
+    const summary = reportData.executiveSummary;
+    doc.setFont(PDF_STYLES.fonts.subtitle.font, 'bold');
     doc.setTextColor(...PDF_STYLES.colors.primary);
-    doc.text('ESTADÍSTICAS POR ESPECIALIDAD', PDF_STYLES.spacing.margin, yPosition);
-    yPosition += 8;
+    doc.setFontSize(PDF_STYLES.fonts.subtitle.size);
+    doc.text('Resumen Ejecutivo', margin, currentY);
+    currentY += 8;
 
-    const tableColumns = [
-      { header: 'Especialidad', dataKey: 'specialty' },
-      { header: 'Total Consultas', dataKey: 'totalConsultations' },
-      { header: 'Pacientes Únicos', dataKey: 'uniquePatients' },
-      { header: 'Médicos Únicos', dataKey: 'uniqueDoctors' },
-      { header: 'Promedio por Médico', dataKey: 'avgConsultationsPerDoctor' }
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...PDF_STYLES.colors.text);
+    doc.setFontSize(PDF_STYLES.fonts.normal.size);
+
+    const summaryData = [
+      ['Total de Consultas', summary.totalConsultations || 0],
+      ['Periodo Analizado', PDFUtils.formatDateRange(summary.dateRangeStart, summary.dateRangeEnd)]
     ];
 
-    const tableRows = specialtyStatistics.map(item => ({
-      specialty: item.specialty || 'No especificado',
-      totalConsultations: (item.totalConsultations || 0).toLocaleString(),
-      uniquePatients: (item.uniquePatients || 0).toLocaleString(),
-      uniqueDoctors: (item.uniqueDoctors || 0).toLocaleString(),
-      avgConsultationsPerDoctor: (item.avgConsultationsPerDoctor || 0).toFixed(1)
-    }));
-
-    autoTable(doc, {
-      columns: tableColumns,
-      body: tableRows,
-      startY: yPosition,
+    doc.autoTable({
+      startY: currentY,
+      head: [['Métrica', 'Valor']],
+      body: summaryData,
       theme: 'grid',
       headStyles: {
         fillColor: PDF_STYLES.colors.primary,
         textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        fontSize: PDF_STYLES.fonts.tableHeader.size,
-        cellPadding: 2
+        fontStyle: 'bold'
       },
-      bodyStyles: {
-        fontSize: PDF_STYLES.fonts.tableBody.size,
-        textColor: PDF_STYLES.colors.primary,
-        cellPadding: 2
+      styles: {
+        fontSize: PDF_STYLES.fonts.small.size,
+        cellPadding: 3
       },
-      alternateRowStyles: {
-        fillColor: PDF_STYLES.colors.lightGray
-      },
-      margin: { left: PDF_STYLES.spacing.margin, right: PDF_STYLES.spacing.margin }
+      margin: { left: margin, right: margin }
     });
 
-    yPosition = doc.lastAutoTable.finalY + 10;
+    currentY = doc.previousAutoTable.finalY + 10;
   }
 
-  // Tabla de top doctors
-  if (topActiveDoctors.length > 0) {
-    doc.setFontSize(PDF_STYLES.fonts.section.size);
-    doc.setFont('helvetica', 'bold');
+  // Estadísticas por especialidad
+  if (reportData.specialtyStatistics && reportData.specialtyStatistics.length > 0) {
+    doc.setFont(PDF_STYLES.fonts.subtitle.font, 'bold');
     doc.setTextColor(...PDF_STYLES.colors.primary);
-    doc.text('TOP 5 MÉDICOS MÁS ACTIVOS', PDF_STYLES.spacing.margin, yPosition);
-    yPosition += 8;
+    doc.setFontSize(PDF_STYLES.fonts.subtitle.size);
+    doc.text('Estadísticas por Especialidad', margin, currentY);
+    currentY += 8;
 
-    const tableColumns = [
-      { header: 'Médico', dataKey: 'doctorName' },
-      { header: 'Total Consultas', dataKey: 'totalConsultations' },
-      { header: 'Porcentaje', dataKey: 'consultationShare' }
-    ];
+    const tableData = reportData.specialtyStatistics.map(stat => [
+      stat.specialty,
+      stat.totalConsultations,
+      stat.uniqueDoctors,
+      stat.uniquePatients,
+      stat.avgConsultationsPerDoctor.toFixed(2)
+    ]);
 
-    const tableRows = topActiveDoctors.slice(0, 5).map(item => ({
-      doctorName: item.doctorName || 'No especificado',
-      totalConsultations: (item.totalConsultations || 0).toLocaleString(),
-      consultationShare: (item.consultationShare || 0).toFixed(1) + '%'
-    }));
-
-    autoTable(doc, {
-      columns: tableColumns,
-      body: tableRows,
-      startY: yPosition,
+    doc.autoTable({
+      startY: currentY,
+      head: [['Especialidad', 'Total Consultas', 'Médicos', 'Pacientes', 'Prom. Consultas/Médico']],
+      body: tableData,
       theme: 'grid',
       headStyles: {
         fillColor: PDF_STYLES.colors.primary,
         textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        fontSize: PDF_STYLES.fonts.tableHeader.size,
-        cellPadding: 2
+        fontStyle: 'bold'
       },
-      bodyStyles: {
-        fontSize: PDF_STYLES.fonts.tableBody.size,
-        textColor: PDF_STYLES.colors.primary,
-        cellPadding: 2
+      styles: {
+        fontSize: PDF_STYLES.fonts.small.size,
+        cellPadding: 3
       },
-      alternateRowStyles: {
-        fillColor: PDF_STYLES.colors.lightGray
-      },
-      margin: { left: PDF_STYLES.spacing.margin, right: PDF_STYLES.spacing.margin }
+      margin: { left: margin, right: margin }
     });
 
-    yPosition = doc.lastAutoTable.finalY + 10;
+    currentY = doc.previousAutoTable.finalY + 10;
+  }
+
+  // Médicos más activos
+  if (reportData.topActiveDoctors && reportData.topActiveDoctors.length > 0) {
+    // Verificar si necesitamos una nueva página
+    if (currentY > 240) {
+      doc.addPage();
+      currentY = header + 10;
+      PDFUtils.addHeader(doc, 'Reporte de Especialidades Médicas', 'Médicos más activos');
+    }
+
+    doc.setFont(PDF_STYLES.fonts.subtitle.font, 'bold');
+    doc.setTextColor(...PDF_STYLES.colors.primary);
+    doc.setFontSize(PDF_STYLES.fonts.subtitle.size);
+    doc.text('Médicos más Activos', margin, currentY);
+    currentY += 8;
+
+    const doctorsData = reportData.topActiveDoctors.map(doctor => [
+      doctor.doctorName,
+      doctor.totalConsultations,
+      `${doctor.consultationShare}%`
+    ]);
+
+    doc.autoTable({
+      startY: currentY,
+      head: [['Médico', 'Consultas', '% del Total']],
+      body: doctorsData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: PDF_STYLES.colors.primary,
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      styles: {
+        fontSize: PDF_STYLES.fonts.small.size,
+        cellPadding: 3
+      },
+      margin: { left: margin, right: margin }
+    });
+
+    currentY = doc.previousAutoTable.finalY + 10;
   }
 
   // Distribución semanal
-  if (Object.keys(weeklyDistribution).length > 0) {
-    doc.setFontSize(PDF_STYLES.fonts.section.size);
-    doc.setFont('helvetica', 'bold');
+  if (reportData.weeklyDistribution) {
+    // Verificar si necesitamos una nueva página
+    if (currentY > 240) {
+      doc.addPage();
+      currentY = header + 10;
+      PDFUtils.addHeader(doc, 'Reporte de Especialidades Médicas', 'Distribución semanal');
+    }
+
+    doc.setFont(PDF_STYLES.fonts.subtitle.font, 'bold');
     doc.setTextColor(...PDF_STYLES.colors.primary);
-    doc.text('DISTRIBUCIÓN SEMANAL', PDF_STYLES.spacing.margin, yPosition);
-    yPosition += 8;
+    doc.setFontSize(PDF_STYLES.fonts.subtitle.size);
+    doc.text('Distribución Semanal', margin, currentY);
+    currentY += 8;
 
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const dayNames = {
-      'Monday': 'Lunes',
-      'Tuesday': 'Martes',
-      'Wednesday': 'Miércoles',
-      'Thursday': 'Jueves',
-      'Friday': 'Viernes',
-      'Saturday': 'Sábado',
-      'Sunday': 'Domingo'
-    };
+    const weeklyData = Object.entries(reportData.weeklyDistribution).map(([day, count]) => [
+      day,
+      count,
+      `${((count / reportData.executiveSummary.totalConsultations) * 100).toFixed(1)}%`
+    ]);
 
-    const tableColumns = days.map(day => ({
-      header: dayNames[day],
-      dataKey: day
-    }));
-
-    const tableRow = {};
-    days.forEach(day => {
-      tableRow[day] = (weeklyDistribution[day] || 0).toString();
-    });
-
-    autoTable(doc, {
-      columns: tableColumns,
-      body: [tableRow],
-      startY: yPosition,
+    doc.autoTable({
+      startY: currentY,
+      head: [['Día', 'Consultas', '% del Total']],
+      body: weeklyData,
       theme: 'grid',
       headStyles: {
         fillColor: PDF_STYLES.colors.primary,
         textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        fontSize: PDF_STYLES.fonts.tableHeader.size,
-        cellPadding: 2
+        fontStyle: 'bold'
       },
-      bodyStyles: {
-        fontSize: PDF_STYLES.fonts.tableBody.size,
-        textColor: PDF_STYLES.colors.primary,
-        cellPadding: 2
+      styles: {
+        fontSize: PDF_STYLES.fonts.small.size,
+        cellPadding: 3
       },
-      alternateRowStyles: {
-        fillColor: PDF_STYLES.colors.lightGray
-      },
-      margin: { left: PDF_STYLES.spacing.margin, right: PDF_STYLES.spacing.margin }
+      margin: { left: margin, right: margin }
     });
+
+    currentY = doc.previousAutoTable.finalY + 10;
   }
 
-  PDFUtils.addFooter(doc);
-  return doc;
-}
+  // KPIs
+  if (reportData.kpis) {
+    // Verificar si necesitamos una nueva página
+    if (currentY > 240) {
+      doc.addPage();
+      currentY = header + 10;
+      PDFUtils.addHeader(doc, 'Reporte de Especialidades Médicas', 'Indicadores clave');
+    }
+
+    doc.setFont(PDF_STYLES.fonts.subtitle.font, 'bold');
+    doc.setTextColor(...PDF_STYLES.colors.primary);
+    doc.setFontSize(PDF_STYLES.fonts.subtitle.size);
+    doc.text('Indicadores Clave de Rendimiento', margin, currentY);
+    currentY += 8;
+
+    const kpisData = [
+      ['Especialidades Distintas', reportData.kpis.distinctSpecialties],
+      ['Médicos Involucrados', reportData.kpis.doctorsInvolved],
+      ['Centros Médicos', reportData.kpis.medicalCentersInvolved],
+      ['Total Pacientes Únicos', reportData.kpis.uniquePatientsTotal],
+      ['Promedio Consultas por Médico', reportData.kpis.avgConsultationsPerDoctor.toFixed(2)],
+      ['Consultas con Diagnóstico', reportData.kpis.dataQuality.consultationsWithDiagnosis],
+      ['Consultas con Tratamiento', reportData.kpis.dataQuality.consultationsWithTreatment],
+      ['Completitud de Datos (%)', `${reportData.kpis.dataQuality.dataCompletenessPercentage}%`]
+    ];
+
+    doc.autoTable({
+      startY: currentY,
+      head: [['Indicador', 'Valor']],
+      body: kpisData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: PDF_STYLES.colors.primary,
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      styles: {
+        fontSize: PDF_STYLES.fonts.small.size,
+        cellPadding: 3
+      },
+      margin: { left: margin, right: margin }
+    });
+
+    currentY = doc.previousAutoTable.finalY + 10;
+  }
+
+  // Pie de página en todas las páginas
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    PDFUtils.addFooter(doc, i, pageCount);
+  }
+
+  return doc.output('blob');
+};

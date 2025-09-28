@@ -49,36 +49,27 @@ export const PDFUtils = {
     const activeFilters = [];
     
     if (filters.startDate && filters.endDate) {
-      const start = format(new Date(filters.startDate), 'dd/MM/yyyy', { locale: es });
-      const end = format(new Date(filters.endDate), 'dd/MM/yyyy', { locale: es });
-      activeFilters.push(`Período: ${start} - ${end}`);
+      activeFilters.push(`Periodo: ${this.formatDateRange(filters.startDate, filters.endDate)}`);
     }
     
-    if (filters.specialty && filters.specialty !== 'ALL') {
-      activeFilters.push(`Especialidad: ${filters.specialtyName || 'Filtrada'}`);
+    if (filters.specialty) {
+      activeFilters.push(`Especialidad: ${filters.specialty}`);
     }
     
-    if (filters.doctor && filters.doctor !== 'ALL') {
-      activeFilters.push(`Médico: ${filters.doctorName || 'Filtrado'}`);
+    if (filters.doctor) {
+      activeFilters.push(`Médico: ${filters.doctor}`);
     }
     
-    if (filters.medicalCenter && filters.medicalCenter !== 'ALL') {
-      activeFilters.push(`Centro Médico: ${filters.medicalCenterName || 'Filtrado'}`);
+    if (filters.medicalCenter) {
+      activeFilters.push(`Centro Médico: ${filters.medicalCenter}`);
     }
-    
+
     if (activeFilters.length > 0) {
-      currentY += 6;
-      doc.setFont('helvetica', 'bold');
-      doc.text('Filtros Aplicados:', margin, currentY);
-      
-      activeFilters.forEach((filter, index) => {
-        currentY += 4;
-        doc.setFont('helvetica', 'normal');
-        doc.text(`• ${filter}`, margin + 5, currentY);
-      });
+      currentY += 4;
+      doc.text(`Filtros aplicados: ${activeFilters.join(' | ')}`, margin, currentY);
     }
-    
-    return currentY + 8;
+
+    return currentY + 6;
   },
 
   addExecutiveSummary(doc, metrics, yPosition) {
@@ -119,25 +110,30 @@ export const PDFUtils = {
     return currentY + (half * 12) + 10;
   },
 
-  addFooter(doc) {
-    const pageCount = doc.internal.getNumberOfPages();
-    const pageHeight = doc.internal.pageSize.height;
-    
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      
-      doc.setFontSize(PDF_STYLES.fonts.small.size);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...PDF_STYLES.colors.secondary);
-      
-      doc.setDrawColor(...PDF_STYLES.colors.mediumGray);
-      doc.setLineWidth(0.2);
-      doc.line(PDF_STYLES.spacing.margin, pageHeight - 15, 210 - PDF_STYLES.spacing.margin, pageHeight - 15);
-      
-      doc.text('Hospital Management System - Reporte Confidencial', 
-               PDF_STYLES.spacing.margin, pageHeight - 10);
-      doc.text(`Página ${i} de ${pageCount}`, 
-               210 - PDF_STYLES.spacing.margin, pageHeight - 10, { align: 'right' });
-    }
+  addFooter(doc, pageNumber, totalPages) {
+    const { margin } = PDF_STYLES.spacing;
+    const pageSize = doc.internal.pageSize;
+    const pageHeight = pageSize.height;
+
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+
+    doc.text(`Hospital Management System - Confidencial`, margin, pageHeight - 10);
+    doc.text(`Página ${pageNumber} de ${totalPages}`, pageSize.width - margin, pageHeight - 10, { align: 'right' });
   },
+
+  formatDateRange(startDate, endDate) {
+    if (!startDate || !endDate) return 'Periodo completo';
+
+    // Convertir las cadenas a objetos Date si es necesario
+    const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+    const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+
+    return `${format(start, 'dd/MM/yyyy')} - ${format(end, 'dd/MM/yyyy')}`;
+  },
+
+  formatPercentage(value) {
+    return `${Number(value).toFixed(1)}%`;
+  }
 };
