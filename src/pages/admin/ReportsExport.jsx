@@ -21,7 +21,7 @@ const ReportsExport = () => {
     format: 'pdf',
     startDate: '',
     endDate: '',
-    includeDetails: true,
+    includeDetails: false,
     exportName: ''
   });
 
@@ -55,9 +55,6 @@ const ReportsExport = () => {
     }
     if (!exportConfig.format) {
       throw new Error('Selecciona un formato de exportación');
-    }
-    if (!exportConfig.exportName.trim()) {
-      throw new Error('Ingresa un nombre para el reporte');
     }
     // When generating doctor reports, a specific doctor must be selected
     if (exportConfig.reportType === 'doctor' && (selectedDoctorId === null || selectedDoctorId === undefined)) {
@@ -237,7 +234,8 @@ const ReportsExport = () => {
         }
 
         const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
-        const filename = `${exportConfig.exportName || 'reporte'}_${timestamp}.pdf`;
+        const reportTypeName = reportTypes.find(t => t.value === exportConfig.reportType)?.label || 'reporte';
+        const filename = `${exportConfig.exportName.trim() || reportTypeName}_${timestamp}.pdf`;
         pdfGenerator.downloadPDF(doc, filename);
 
       } else {
@@ -297,10 +295,10 @@ const ReportsExport = () => {
                 {/* Información básica */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="exportName">Nombre del Reporte</Label>
+                    <Label htmlFor="exportName">Nombre del Reporte (opc.)</Label>
                     <Input
                       id="exportName"
-                      placeholder="Ej: Reporte_Especialidades_Enero"
+                      placeholder="Ej: Reporte_Especialidades_Enero (se genera automáticamente si está vacío)"
                       value={exportConfig.exportName}
                       onChange={(e) => handleConfigChange('exportName', e.target.value)}
                     />
@@ -476,7 +474,7 @@ const ReportsExport = () => {
 
                 <Button
                   onClick={exportReport}
-                  disabled={loading || !exportConfig.exportName.trim()}
+                  disabled={loading}
                   className="w-full"
                 >
                   {loading ? (
