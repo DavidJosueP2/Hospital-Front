@@ -75,6 +75,7 @@ export const AuthProvider = ({ children }) => {
           error?.response?.data?.message ||
           error?.message ||
           "Error de inicio de sesión",
+        errorData: error?.response?.data ?? null,
       };
     }
   };

@@ -5,8 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/shadcn/input";
 import { Label } from "@/components/ui/shadcn/label";
 import { Button } from "@/components/ui/shadcn/button";
-import { Alert, AlertDescription } from "@/components/ui/shadcn/alert";
-import {toast} from "sonner";
+import { toast } from "sonner";
 
 function LoginFormComponent() {
   const [identifier, setIdentifier] = useState(""); // DNI o Email
@@ -37,35 +36,32 @@ function LoginFormComponent() {
     return Object.keys(newErrors).length === 0;
   };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!validateForm()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-        try {
-            const result = await login(identifier, password);
+    try {
+      const result = await login(identifier, password);
 
-            if (result.success) {
-                toast.success("Inicio de sesión correcto", {
-                    id: "login-success",
-                    description: "Bienvenido de nuevo",
-                });
-                navigate("/", { replace: true });
-            } else {
-                setErrors({ general: result.message || "Credenciales inválidas" });
-            }
-        } catch {
-            setErrors({ general: "Error en el servidor. Intenta más tarde." });
-        }
-    };
+      if (result.success) {
+        toast.success("Inicio de sesión correcto", {
+          id: "login-success",
+          description: "Bienvenido de nuevo",
+        });
+        navigate("/", { replace: true });
+      } else {
+        // Preferir el campo `error` que devuelve el backend cuando existe
+        const backendError = result.errorData?.error || result.errorData?.message || result.message;
+        toast.error(backendError || "Credenciales inválidas", { id: "login-error" });
+      }
+    } catch (e) {
+      const backendError = e?.response?.data?.error || e?.response?.data?.message;
+      toast.error(backendError || "Error en el servidor. Intenta más tarde.", { id: "login-error" });
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {errors.general && (
-        <Alert variant="destructive">
-          <AlertDescription>{errors.general}</AlertDescription>
-        </Alert>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* DNI o Email */}
         <div className="grid gap-2">

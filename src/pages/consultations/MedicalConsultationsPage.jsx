@@ -7,18 +7,23 @@ import {
 } from "@/hooks/useConsultations";
 import { Button } from "@/components/ui/shadcn/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/shadcn/dialog";
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from "@/components/ui/shadcn/alert-dialog";
 import DataTable from "@/components/ui/table/data-table-pb";
 import { Plus, Pencil, Trash2, Eye, ClipboardList } from "lucide-react";
 import { PageHeading } from "@/components/ui/typography/Heading";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useCenter } from "@/hooks/useMedicalCenters";
+
+
 
 export default function MedicalConsultationsPage() {
     const navigate = useNavigate();
@@ -183,52 +188,57 @@ export default function MedicalConsultationsPage() {
             </div>
 
             {/* Modal Confirmar Eliminación */}
-            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                <DialogContent className="max-w-md w-full">
-                    <DialogHeader>
-                        <DialogTitle>Confirmar eliminación</DialogTitle>
-                    </DialogHeader>
-                    {consultationToDelete && (
-                        <p className="py-4">
-                            ¿Eliminar la consulta del paciente{" "}
-                            <strong>
-                                {consultationToDelete.patient.firstName}{" "}
-                                {consultationToDelete.patient.lastName}
-                            </strong>{" "}
-                            con fecha{" "}
-                            <strong>
-                                {new Date(consultationToDelete.date).toLocaleDateString(
-                                    "es-EC"
-                                )}
-                            </strong>
-                            ?
-                        </p>
-                    )}
-                    <DialogFooter>
-                        <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
-                            Cancelar
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={async () => {
-                                try {
-                                    await deleteMut.mutateAsync(consultationToDelete.id);
-                                    toast.success("Consulta médica eliminada");
-                                    setConfirmOpen(false);
-                                    resetModalStates();
-                                    refetch();
-                                } catch (e) {
-                                    toast.error(
-                                        e?.data?.detail || "Error al eliminar la consulta médica"
-                                    );
-                                }
-                            }}
-                        >
-                            Eliminar
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+         {/* Modal Confirmar Eliminación */}
+<AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>¿Eliminar consulta médica?</AlertDialogTitle>
+      <AlertDialogDescription>
+        {consultationToDelete ? (
+          <>
+            Esta acción eliminará la consulta del paciente{" "}
+            <strong>
+              {consultationToDelete.patient.firstName}{" "}
+              {consultationToDelete.patient.lastName}
+            </strong>{" "}
+            con fecha{" "}
+            <strong>
+              {new Date(consultationToDelete.date).toLocaleDateString("es-EC")}
+            </strong>.
+          </>
+        ) : (
+          "Esta acción no se puede deshacer."
+        )}
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel onClick={() => setConfirmOpen(false)}>
+        Cancelar
+      </AlertDialogCancel>
+      <AlertDialogAction
+        onClick={async () => {
+          if (!consultationToDelete) return;
+          try {
+            await deleteMut.mutateAsync(consultationToDelete.id);
+            toast.success("Consulta médica eliminada", {
+              description: `ID ${consultationToDelete.id}`,
+            });
+            setConfirmOpen(false);
+            resetModalStates();
+            refetch();
+          } catch (e) {
+            toast.error(
+              e?.data?.detail || "Error al eliminar la consulta médica"
+            );
+          }
+        }}
+      >
+        Eliminar
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
         </div>
     );
 }
