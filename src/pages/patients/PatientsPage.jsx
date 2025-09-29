@@ -21,6 +21,16 @@ import {
     useDeletePatient,
 } from "@/hooks/usePatient";
 import { getUserCenterId } from "@/utils/auth";
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from "@/components/ui/shadcn/alert-dialog";
 
 export default function PatientsPage() {
     const [formOpen, setFormOpen] = useState(false);
@@ -255,35 +265,43 @@ export default function PatientsPage() {
             </Dialog>
 
             {/* Modal Confirmar Eliminación */}
-            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                <DialogContent className="max-w-md w-full">
-                    <DialogHeader>
-                        <DialogTitle>Confirmar eliminación</DialogTitle>
-                    </DialogHeader>
-                    {patientToDelete && (
-                        <p className="py-4">
-                            ¿Eliminar a {patientToDelete.firstName} {patientToDelete.lastName}?
-                        </p>
-                    )}
-                    <DialogFooter>
-                        <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
-                            Cancelar
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={async () => {
-                                await deleteMut.mutateAsync(patientToDelete.id);
-                                toast.success("Paciente eliminado");
-                                setConfirmOpen(false);
-                                resetModalStates();
-                                refetch();
-                            }}
-                        >
-                            Eliminar
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+         {/* Modal Confirmar Eliminación */}
+<AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>¿Eliminar paciente?</AlertDialogTitle>
+      <AlertDialogDescription>
+        {patientToDelete
+          ? `Esta acción eliminará a ${patientToDelete.firstName} ${patientToDelete.lastName}.`
+          : "Esta acción no se puede deshacer."}
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>
+        Cancelar
+      </AlertDialogCancel>
+      <AlertDialogAction
+        onClick={async () => {
+          if (!patientToDelete) return;
+          try {
+            await deleteMut.mutateAsync(patientToDelete.id);
+            toast.success("Paciente eliminado", {
+              description: `ID ${patientToDelete.id}`,
+            });
+            setConfirmOpen(false);
+            resetModalStates();
+            refetch();
+          } catch (e) {
+            toast.error(e?.data?.detail || "Error al eliminar");
+          }
+        }}
+      >
+        Eliminar
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
         </div>
     );
 }

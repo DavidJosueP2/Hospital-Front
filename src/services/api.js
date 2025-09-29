@@ -30,10 +30,19 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Si el token expiró (401), limpiar tokens y redirigir al login
+  
     if (error.response?.status === 401) {
-      clearTokens();
-      window.location.href = "/login";
+     
+      const reqUrl = error.config?.url || "";
+      const isLoginEndpoint = reqUrl.includes("/auth/login") || reqUrl.endsWith("/auth/login");
+   
+      if (!isLoginEndpoint) {
+        clearTokens();
+        window.location.href = "/login";
+      } else {
+      
+        return Promise.reject(error);
+      }
     }
 
     // Si es un error de red
