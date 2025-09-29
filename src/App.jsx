@@ -21,13 +21,15 @@ import { useAuth } from "@/hooks/use-auth";
 import AuthLayout from "@/layouts/AuthLayout.jsx";
 import SpecialtiesOfferPage from "@/pages/specialty/SpecialtiesOfferPage.jsx";
 import ProfilePage from "@/pages/profile/ProfilePage";
+import ReportsDashboard from "@/components/admin/ReportsDashboard.jsx";
+import ReportsExport from "@/pages/admin/ReportsExport.jsx";
 
 function RoleBasedHome() {
   const { user } = useAuth();
   const roles = Array.isArray(user?.roles)
     ? user.roles.map((r) => String(r).toUpperCase())
     : [];
-  if (roles.includes("ADMIN")) return <Navigate to="/playground" replace />;
+  if (roles.includes("ADMIN")) return <Navigate to="/admin/playground" replace />;
   if (roles.includes("DOCTOR")) return <Navigate to="/patients" replace />;
   return <Navigate to="/forbidden" replace />;
 }
@@ -53,11 +55,13 @@ export default function App() {
 
               {/* --- ADMIN ONLY --- */}
               <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-                <Route path="/playground" element={<Playground />} />
-                <Route path="/employees" element={<EmployeesPage />} />
-                <Route path="/centers" element={<MedicalCentersPage />} />
-                <Route path="/specialties" element={<SpecialtiesPage />} />
-                <Route path="/doctors" element={<DoctorsPage />} />
+                <Route path="/admin/playground" element={<Playground />} />
+                <Route path="/admin/employees" element={<EmployeesPage />} />
+                <Route path="/admin/centers" element={<MedicalCentersPage />} />
+                <Route path="/admin/specialties" element={<SpecialtiesPage />} />
+                <Route path="/admin/doctors" element={<DoctorsPage />} />
+                <Route path="/admin/reports" element={<ReportsDashboard />} />
+                <Route path="/admin/reports/export" element={<ReportsExport />} />
               </Route>
 
               {/* --- DOCTOR ONLY --- */}

@@ -26,8 +26,13 @@ export const listCenters = async ({ includeDeleted = false, page = 0, size = 10,
 };
 
 export const listAllCenters = async ({ includeDeleted = false } = {}) => {
-    const res = await api.get("/admin/centers/all", { params: { includeDeleted } });
-    return toCamel(res.data); // array simple
+    try {
+        const res = await api.get("/admin/centers/all", { params: { includeDeleted } });
+        return toCamel(res.data); // array simple
+    } catch (error) {
+        console.error('Error fetching all medical centers:', error);
+        return [];
+    }
 };
 
 export const getCenter = async (id, { includeDeleted = false } = {}) => {
