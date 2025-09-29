@@ -31,7 +31,7 @@ const ReportsExport = () => {
   const reportTypes = [
     { value: 'specialty', label: 'Consultas por Especialidad' },
     { value: 'doctor', label: 'Rendimiento de Médicos' },
-    { value: 'medical-center', label: 'Análisis por Centro Médico' },
+    { value: 'medical_center', label: 'Análisis por Centro Médico' },
     { value: 'monthly', label: 'Reporte Mensual' },
     { value: 'comprehensive', label: 'Reporte Integral' }
   ];
@@ -40,7 +40,6 @@ const ReportsExport = () => {
     { value: 'pdf', label: 'PDF', description: 'Formato profesional para presentaciones' },
     { value: 'excel', label: 'Excel', description: 'Para análisis y manipulación de datos' },
     { value: 'csv', label: 'CSV', description: 'Para importar en otras herramientas' },
-    { value: 'json', label: 'JSON', description: 'Para integración con sistemas' }
   ];
 
   const handleConfigChange = (key, value) => {
@@ -60,6 +59,10 @@ const ReportsExport = () => {
     if (!exportConfig.exportName.trim()) {
       throw new Error('Ingresa un nombre para el reporte');
     }
+    // When generating doctor reports, a specific doctor must be selected
+    if (exportConfig.reportType === 'doctor' && (selectedDoctorId === null || selectedDoctorId === undefined)) {
+      throw new Error('Selecciona un médico para el reporte por médico');
+    }
     return true;
   };
 
@@ -70,8 +73,24 @@ const ReportsExport = () => {
       listAllDoctors()
         .then(data => {
           if (!mounted) return;
-          // Expecting an array of doctors
-          setDoctors(Array.isArray(data) ? data : []);
+          // Debug: log raw response (helps diagnose shape issues)
+          console.debug('[ReportsExport] listAllDoctors raw response:', data);
+          // Normalize possible response shapes: array | { data: [] } | { content: [] }
+          const docs = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.data)
+              ? data.data
+              : Array.isArray(data?.content)
+                ? data.content
+                : [];
+          console.debug('[ReportsExport] normalized doctors array:', docs);
+          setDoctors(docs);
+          // Auto-select first doctor when switching to doctor report if none selected
+          if (docs.length > 0) {
+            setSelectedDoctorId(prev => (prev === null || prev === undefined) ? docs[0].id : prev);
+          } else {
+            console.warn('[ReportsExport] No doctors were returned by listAllDoctors');
+          }
         })
         .catch(err => {
           console.error('Error fetching doctors for export:', err);
@@ -82,20 +101,65 @@ const ReportsExport = () => {
   }, [exportConfig.reportType]);
 
   // Helper to format doctor label as "Nombre Apellido" with sensible fallbacks
+  const fixEncoding = (str) => {
+  if (!str) return str;
+  return str
+    .replace(/¡/g, 'í')
+    .replace(/¢/g, 'ó')
+    .replace(/‚/g, 'é')
+    .replace(/„/g, 'ä')
+    .replace(/…/g, 'à')
+    .replace(/†/g, 'á')
+    .replace(/‡/g, 'â')
+    .replace(/ˆ/g, 'ê')
+    .replace(/‰/g, 'ë')
+    .replace(/Š/g, 'è')
+    .replace(/‹/g, 'ï')
+    .replace(/Œ/g, 'î')
+    .replace(//g, 'ì')
+    .replace(/Ž/g, 'ô')
+    .replace(//g, 'ö')
+    .replace(//g, 'ò')
+    .replace(/'/g, 'ú')
+    .replace(/'/g, 'ù')
+    .replace(/“/g, 'ü')
+    .replace(/”/g, 'û')
+    .replace(/•/g, 'ñ')
+    .replace(/–/g, 'Ñ')
+    .replace(/—/g, 'Á')
+    .replace(/˜/g, 'É')
+    .replace(/™/g, 'Í')
+    .replace(/š/g, 'Ó')
+    .replace(/›/g, 'Ú')
+    .replace(/œ/g, 'Ü')
+    .replace(//g, '¿')
+    .replace(/ž/g, '¡');
+};
+
   const formatDoctorLabel = (doc) => {
     if (!doc) return '';
     const user = doc.user || {};
-    const firstName = user.firstName || user.name || '';
-    const lastName = user.lastName || user.surname || '';
+    const firstName = fixEncoding(user.firstName || user.name || '');
+    const lastName = fixEncoding(user.lastName || user.surname || '');
+    // Try to locate a document/cedula value from multiple possible fields
+    const docCandidates = [
+      doc.dni,
+      doc.cedula,
+      doc.documentNumber,
+      doc.document,
+      doc.identificationNumber,
+      user.dni,
+      user.cedula,
+      user.documentNumber,
+      user.document,
+      user.identificationNumber
+    ];
 
-    if (firstName) {
-      return `${firstName}${lastName ? ' ' + lastName : ''}`.trim();
-    }
+    const docValue = docCandidates.find(v => v !== null && v !== undefined && String(v).trim() !== '');
 
-    if (doc.fullName) return doc.fullName;
-    if (user.name) return user.name;
-    if (doc.username) return doc.username;
-    return `Doctor ${doc.id || ''}`.trim();
+    const namePart = firstName ? `${firstName}${lastName ? ' ' + lastName : ''}`.trim() : (fixEncoding(doc.fullName) || fixEncoding(user.name) || doc.username || `Doctor ${doc.id || ''}`);
+
+    return docValue ? `${namePart} — Cédula: ${String(docValue)}` : namePart;
   };
 
   const exportReport = async () => {
@@ -264,17 +328,20 @@ const ReportsExport = () => {
                   {exportConfig.reportType === 'doctor' && (
                     <div className="space-y-2">
                       <Label htmlFor="doctorSelect">Médico</Label>
-                      <Select value={selectedDoctorId != null ? String(selectedDoctorId) : 'all'} onValueChange={(v) => setSelectedDoctorId(v === 'all' ? null : Number(v))}>
+                      <Select value={selectedDoctorId != null ? String(selectedDoctorId) : ''} onValueChange={(v) => setSelectedDoctorId(v && v !== 'none' ? Number(v) : null)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecciona médico (opcional)" />
+                          <SelectValue placeholder="Selecciona médico" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">Todos</SelectItem>
-                          {doctors.map((doc) => (
-                            <SelectItem key={doc.id} value={String(doc.id)}>
-                              {formatDoctorLabel(doc)}
-                            </SelectItem>
-                          ))}
+                          {doctors.length === 0 ? (
+                            <SelectItem value="none">No hay médicos disponibles</SelectItem>
+                          ) : (
+                            doctors.map((doc) => (
+                              <SelectItem key={doc.id} value={String(doc.id)}>
+                                {formatDoctorLabel(doc)}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -385,6 +452,16 @@ const ReportsExport = () => {
                       }
                     </span>
                   </div>
+                  {exportConfig.reportType === 'doctor' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Médico:</span>
+                      <span className="font-medium">
+                        {selectedDoctorId
+                          ? formatDoctorLabel(doctors.find(d => String(d.id) === String(selectedDoctorId)) || {})
+                          : 'No seleccionado'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {loading && (
