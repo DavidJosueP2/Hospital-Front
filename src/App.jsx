@@ -29,8 +29,8 @@ function RoleBasedHome() {
   const roles = Array.isArray(user?.roles)
     ? user.roles.map((r) => String(r).toUpperCase())
     : [];
-  if (roles.includes("ADMIN")) return <Navigate to="/admin/playground" replace />;
-  if (roles.includes("DOCTOR")) return <Navigate to="/patients" replace />;
+  if (roles.includes("ADMIN")) return <Navigate to="/admin/reports" replace />;
+  if (roles.includes("DOCTOR")) return <Navigate to="/consultations" replace />;
   return <Navigate to="/forbidden" replace />;
 }
 
@@ -55,13 +55,13 @@ export default function App() {
 
               {/* --- ADMIN ONLY --- */}
               <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-                <Route path="/admin/playground" element={<Playground />} />
+                <Route path="/admin/reports" element={<ReportsDashboard />} />
+                <Route path="/admin/reports/export" element={<ReportsExport />} />
                 <Route path="/admin/employees" element={<EmployeesPage />} />
                 <Route path="/admin/centers" element={<MedicalCentersPage />} />
                 <Route path="/admin/specialties" element={<SpecialtiesPage />} />
                 <Route path="/admin/doctors" element={<DoctorsPage />} />
-                <Route path="/admin/reports" element={<ReportsDashboard />} />
-                <Route path="/admin/reports/export" element={<ReportsExport />} />
+                <Route path="/admin/playground" element={<Playground />} />
               </Route>
 
               {/* --- DOCTOR ONLY --- */}
