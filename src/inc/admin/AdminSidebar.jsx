@@ -94,7 +94,7 @@ export default function AdminSidebar() {
 
     const MENU = {
         reports: [
-            { to: "/admin/reports", icon: BarChart3, label: "Dashboard de Reportes", roles: ["ADMIN"] },
+            { to: "/admin/reports", icon: BarChart3, label: "Dashboard de Reportes", roles: ["ADMIN"], end: true }, // 👈 exact
             { to: "/admin/reports/export", icon: FileText, label: "Exportar Reportes", roles: ["ADMIN"] },
         ],
         clinic: [
